@@ -76,6 +76,14 @@ Default values are hard-coded in the firmware. Change them before any use outsid
 
 Do not expose the ESP directly to the internet.
 
+## Download firmware (Releases)
+
+Ready-to-flash binaries are built by GitHub Actions and attached to each [release](https://github.com/eljanoc/MHI_CTL_Server/releases) (tags `v*`):
+
+- `MHI-esp8266-<tag>.bin`: ESP8266 firmware (OTA or first flash).
+- `MHI-esp32-<tag>.bin`: ESP32 application only, for updates (OTA) of an already configured board.
+- `MHI-esp32-<tag>-merged.bin`: full ESP32 flash image (bootloader + partitions + application, 4 MB). Use it for a new or blank ESP32, or to recover a corrupted one: `esptool.py --chip esp32 write_flash 0x0 MHI-esp32-<tag>-merged.bin`
+
 ## Build and upload
 - Tool: Arduino IDE / `arduino-cli`.
 - ESP8266 board: `esp8266:esp8266:d1_mini`.

@@ -76,6 +76,14 @@ Des valeurs par défaut sont codées en dur dans le firmware. Change-les avant t
 
 N'expose pas l'ESP directement sur internet.
 
+## Télécharger le firmware (Releases)
+
+Des binaires prêts à flasher sont compilés par GitHub Actions et joints à chaque [release](https://github.com/eljanoc/MHI_CTL_Server/releases) (tags `v*`) :
+
+- `MHI-esp8266-<tag>.bin` : firmware ESP8266 (OTA ou premier flash).
+- `MHI-esp32-<tag>.bin` : application ESP32 seule, pour les mises à jour (OTA) d'une carte déjà configurée.
+- `MHI-esp32-<tag>-merged.bin` : image flash complète ESP32 (bootloader + partitions + application, 4 Mo). À utiliser pour un ESP32 neuf ou vierge, ou pour réparer une flash corrompue : `esptool.py --chip esp32 write_flash 0x0 MHI-esp32-<tag>-merged.bin`
+
 ## Compilation et téléversement
 - Outil : Arduino IDE / `arduino-cli`.
 - Carte ESP8266 : `esp8266:esp8266:d1_mini`.
