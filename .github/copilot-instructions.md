@@ -1,0 +1,22 @@
+# MHI-AC-CtrlServer (V4.25-trace)
+
+Firmware ESP8266 / ESP32 pour piloter une climatisation Mitsubishi Heavy (SPI) via MQTT et interface web.
+Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branches/tags), pas avec des copies de dossier.
+
+## Système de trace des trames
+- Capture : `MHI-AC-Ctrl-core.cpp` / `.h`
+  - file `trace_queue` (16 trames, publication MQTT) et historique `trace_history` / `trace_history_miso` (64 trames MOSI + MISO de 20 octets).
+  - API : `set_trace`, `pop_trace`, `get_trace_dropped`, `is_trace_enabled`, `copy_trace_history`.
+- Publication : `MHI-AC-CtrlServer.ino` (`publishTraceFrames`, `setTrace`, `traceDropped`, `getTraceData`). Trames MOSI en hex sur `<debug>/trame`.
+- MQTT : commandes `traceon` / `traceoff` dans `loop.cpp`.
+- Web : `webserver.cpp` routes `POST /trace?enable=0|1` et `GET /trace_data` (JSON) ; UI dans `mainHTML.h` (case « Détection des trames », rafraîchissement 1 s).
+- `maxFrames` dans le `.ino` doit rester égal à `TRACE_HISTORY_SIZE`.
+
+## Compilation / téléversement
+- Outil : `arduino-cli` d'Arduino IDE (`C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe`).
+- ESP8266 : carte `esp8266:esp8266:d1_mini`. OTA via la tâche VS Code « OTA ESP8266 141 » (`.vscode\tasks.json`, IP 192.168.0.141, build dans `%TEMP%\MHI-ota-8266\build`).
+- Binaires produits dans `bin\` (ignorés par Git) : `MHI8266-V4.25.bin`, `MHI32-V4.25.bin`, `MHI32-V4.25-merged.bin`.
+
+## Historique / décisions
+- Les anciennes copies (V4.20, V4.20-trace) sont remplacées par l'historique Git.
+- Ajouter ici chaque décision importante et piège rencontré.

@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "OTA ESP8266 141",
+			"type": "shell",
+			"command": "& 'C:\\Program Files\\Arduino IDE\\resources\\app\\lib\\backend\\resources\\arduino-cli.exe' upload --fqbn esp8266:esp8266:d1_mini --port 192.168.0.141 --protocol network --upload-field password=climatiseur --input-dir 'C:\\Users\\jeanl\\AppData\\Local\\Temp\\MHI-ota-8266\\build'",
+			"isBackground": false
+		}
+	]
+}
