@@ -53,7 +53,24 @@ Capture les trames SPI échangées avec l'unité intérieure (20 octets) : trame
 ## Compilation et téléversement
 - Outil : Arduino IDE / `arduino-cli`.
 - Carte ESP8266 : `esp8266:esp8266:d1_mini`.
-- Bibliothèques : ArduinoJson, PubSubClient, NTPClient, WiFiManager (dans `libs/`), RemoteDebug.
+- Bibliothèques : ArduinoJson (7.4.3), PubSubClient (2.8), NTPClient (3.2.1), RemoteDebug (3.0.5), WiFiManager 2.0.17 modifiée (copie fournie dans `libs/WiFiManager`).
+- Cartes : esp32 3.1.3 (carte `esp32:esp32:esp32doit-devkit-v1`) et esp8266 2.7.4 (`esp8266:esp8266:d1_mini`).
+- Le dossier du projet doit s'appeler `MHI-AC-CtrlServer` (comme le fichier `.ino`) : `git clone https://github.com/eljanoc/MHI_CTL_Server.git MHI-AC-CtrlServer`.
+
+### Correction de WiFiManager pour ESP8266 uniquement
+Cette correction concerne uniquement les builds ESP8266. Avec WiFiManager 2.0.17 officielle, `getMenuOut()` compare directement `_menutokens[menuId]` (chaîne en mémoire flash) à une chaîne, ce qui provoquait un redémarrage en boucle environ une minute après le démarrage de l'ESP8266. Il faut convertir via `__FlashStringHelper`. Dans `WiFiManager.cpp`, fonction `WiFiManager::getMenuOut()` (vers la ligne 1442), remplacer :
+```cpp
+if((String)_menutokens[menuId] == "param" && _paramsCount == 0) continue;
+if((String)_menutokens[menuId] == "custom" && _customMenuHTML!=NULL){
+```
+par :
+```cpp
+if((String)(__FlashStringHelper *)(_menutokens[menuId]) == "param" && _paramsCount == 0) continue;
+if((String)(__FlashStringHelper *)(_menutokens[menuId]) == "custom" && _customMenuHTML!=NULL){
+```
+La correction est déjà appliquée dans `libs/WiFiManager` du projet et dans la bibliothèque installée (`Documents\Arduino\libraries\WiFiManager`). Si WiFiManager est réinstallée ou mise à jour, il faut la refaire.
+Ne pas considérer cette modification comme nécessaire pour l'ESP32 : elle répond au problème observé sur ESP8266 uniquement.
+
 - Mise à jour OTA possible via la tâche VS Code « OTA ESP8266 141 » (voir `.vscode/tasks.json`).
 
 ## Organisation du code

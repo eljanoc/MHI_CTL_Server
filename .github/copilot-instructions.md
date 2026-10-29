@@ -19,5 +19,6 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 - Binaires produits dans `bin\` (ignorés par Git) : `MHI8266-V4.25.bin`, `MHI32-V4.25.bin`, `MHI32-V4.25-merged.bin`.
 
 ## Historique / décisions
+- WiFiManager 2.0.17 modifiée pour ESP8266 uniquement : correction dans `getMenuOut()` (cast `__FlashStringHelper`), évite un bouclage au démarrage environ une minute après le boot. Voir README. Garder la correction dans `libs/WiFiManager` et `Documents\Arduino\libraries\WiFiManager`; elle répond au problème observé sur ESP8266, pas à un problème ESP32.
 - Les anciennes copies (V4.20, V4.20-trace) sont remplacées par l'historique Git.
 - Ajouter ici chaque décision importante et piège rencontré.
