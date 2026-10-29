@@ -79,7 +79,7 @@ Do not expose the ESP directly to the internet.
 ## Build and upload
 - Tool: Arduino IDE / `arduino-cli`.
 - ESP8266 board: `esp8266:esp8266:d1_mini`.
-- Libraries: ArduinoJson (7.4.3), PubSubClient (2.8), NTPClient (3.2.1), RemoteDebug (3.0.5), OneWire (2.3.8), DallasTemperature (4.0.6), modified WiFiManager 2.0.17 (copy provided in `libs/WiFiManager`).
+- Libraries: ArduinoJson (7.4.3), PubSubClient (2.8), NTPClient (3.2.1), OneWire (2.3.8), DallasTemperature (4.0.6), plus two modified libraries provided in `libs/`: WiFiManager 2.0.17 (`libs/WiFiManager`) and RemoteDebug 3.0.5 (`libs/RemoteDebug`).
 - Board packages: esp32 3.1.3 (board `esp32:esp32:esp32doit-devkit-v1`) and esp8266 2.7.4 (`esp8266:esp8266:d1_mini`). The generic `esp32` board does not compile (`LED_BUILTIN` is missing).
 - The project folder must be named `MHI-AC-CtrlServer` (same as the `.ino` file): `git clone https://github.com/eljanoc/MHI_CTL_Server.git MHI-AC-CtrlServer`.
 
@@ -96,6 +96,13 @@ if((String)(__FlashStringHelper *)(_menutokens[menuId]) == "custom" && _customMe
 ```
 The fix is already applied in the project's `libs/WiFiManager` and in the installed library (`Documents\Arduino\libraries\WiFiManager`). If WiFiManager is reinstalled or updated, it must be applied again.
 This change is not needed for the ESP32: it addresses the problem observed on ESP8266 only.
+
+### RemoteDebug fix for ESP32
+The official RemoteDebug 3.0.5 does not compile with the ESP32 core 3.x: `src/utility/WebSockets.cpp` includes `<hwcrypto/sha.h>`, which no longer exists. The only change is that line, replaced by:
+```cpp
+#include <esp32/sha.h> // <hwcrypto/sha.h>
+```
+The fix is already applied in the project's `libs/RemoteDebug` copy (MIT license kept). If you use the registry version instead, apply it yourself.
 
 ### OTA update
 OTA update is possible through the VS Code task "OTA ESP8266 141" (see `.vscode/tasks.json`). It contains the IP address of the author's device and a masked password (`******`): adapt both to your setup.
@@ -120,5 +127,6 @@ Many thanks to **absalom-muc** for [MHI-AC-Ctrl](https://github.com/absalom-muc/
 ## Credits and license
 - This project is derived from [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) by absalom-muc, released under the MIT license. The decoding of the MHI SPI protocol owes a lot to it.
 - [WiFiManager](https://github.com/tzapu/WiFiManager) by tzapu (MIT license), copied into `libs/WiFiManager` with the ESP8266 fix described above.
-- Third-party libraries: ArduinoJson, PubSubClient, NTPClient, RemoteDebug, OneWire, DallasTemperature.
+- [RemoteDebug](https://github.com/JoaoLopesF/RemoteDebug) by Joao Lopes (MIT license), copied into `libs/RemoteDebug` with the ESP32 fix described above.
+- Third-party libraries: ArduinoJson, PubSubClient, NTPClient, OneWire, DallasTemperature.
 - This repository is released under the MIT license (see [LICENSE](LICENSE)), which keeps the copyright notice of the original project.

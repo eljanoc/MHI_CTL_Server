@@ -20,5 +20,7 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 
 ## Historique / décisions
 - WiFiManager 2.0.17 modifiée pour ESP8266 uniquement : correction dans `getMenuOut()` (cast `__FlashStringHelper`), évite un bouclage au démarrage environ une minute après le boot. Voir README. Garder la correction dans `libs/WiFiManager` et `Documents\Arduino\libraries\WiFiManager`; elle répond au problème observé sur ESP8266, pas à un problème ESP32.
+- RemoteDebug 3.0.5 modifiée pour ESP32 (core 3.x) : `libs/RemoteDebug/src/utility/WebSockets.cpp` inclut `<esp32/sha.h>` au lieu de `<hwcrypto/sha.h>`. Copie dans `libs/RemoteDebug` et `Documents\Arduino\libraries\RemoteDebug`.
+- CI GitHub (`.github/workflows/build.yml`) : compile ESP8266 + ESP32 à chaque push ; un tag `v*` publie une release avec les `.bin`. Piège : Linux est sensible à la casse des `#include` (`include.h`, pas `Include.h`).
 - Les anciennes copies (V4.20, V4.20-trace) sont remplacées par l'historique Git.
 - Ajouter ici chaque décision importante et piège rencontré.
