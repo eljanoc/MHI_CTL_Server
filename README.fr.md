@@ -79,7 +79,7 @@ N'expose pas l'ESP directement sur internet.
 ## Compilation et téléversement
 - Outil : Arduino IDE / `arduino-cli`.
 - Carte ESP8266 : `esp8266:esp8266:d1_mini`.
-- Bibliothèques : ArduinoJson (7.4.3), PubSubClient (2.8), NTPClient (3.2.1), OneWire (2.3.8), DallasTemperature (4.0.6), plus deux bibliothèques modifiées fournies dans `libs/` : WiFiManager 2.0.17 (`libs/WiFiManager`) et RemoteDebug 3.0.5 (`libs/RemoteDebug`).
+- Bibliothèques : ArduinoJson (7.4.3), PubSubClient (2.8), OneWire (2.3.8), DallasTemperature (4.0.6), plus trois bibliothèques modifiées fournies dans `libs/` : WiFiManager 2.0.17 (`libs/WiFiManager`), RemoteDebug 3.0.5 (`libs/RemoteDebug`) et NTPClient 3.2.1 (`libs/NTPClient`, `byte` remplacé par `uint8_t` dans `NTPClient.h`, ambiguïté avec `std::byte` sous `using namespace std`).
 - Cartes : esp32 3.1.3 (carte `esp32:esp32:esp32doit-devkit-v1`) et esp8266 2.7.4 (`esp8266:esp8266:d1_mini`). La carte générique `esp32` ne compile pas (`LED_BUILTIN` absent).
 - Le dossier du projet doit s'appeler `MHI-AC-CtrlServer` (comme le fichier `.ino`) : `git clone https://github.com/eljanoc/MHI_CTL_Server.git MHI-AC-CtrlServer`.
 

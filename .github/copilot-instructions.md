@@ -24,3 +24,5 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 - CI GitHub (`.github/workflows/build.yml`) : compile ESP8266 + ESP32 à chaque push ; un tag `v*` publie une release avec les `.bin`. Piège : Linux est sensible à la casse des `#include` (`include.h`, pas `Include.h`).
 - Les anciennes copies (V4.20, V4.20-trace) sont remplacées par l'historique Git.
 - Ajouter ici chaque décision importante et piège rencontré.
+
+- NTPClient 3.2.1 modifiee : \yte\ -> \uint8_t\ dans NTPClient.h (ambiguite std::byte avec using namespace std). Copie dans libs/NTPClient, utilisee par la CI.
