@@ -1,4 +1,4 @@
-#include "Include.h"
+#include "include.h"
 #include <WiFiManager.h>   //https://github.com/tzapu/WiFiManager
 
 //Variables below are initial values that can be changed at any time from the WiFiManager configuration portal and will be stored in flash memory. If there are different values in config.json, they are overwritten.

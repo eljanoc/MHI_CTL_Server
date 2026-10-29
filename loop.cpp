@@ -7,7 +7,7 @@ Updates received via MQTT are sent from the ESP8266 to the Arduino over serial a
 R.J. Dekker, June 2018
 ##############################################################################################################################################################################################
 */
-#include "Include.h"
+#include "include.h"
 
 //Access point that WiFiManager starts for configuration. Name and password should be set below before flashing.
 //This is hardcoded and cannot be changed later.

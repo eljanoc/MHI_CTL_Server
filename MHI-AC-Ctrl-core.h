@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Include.h"
+#include "include.h"
 #include <Arduino.h>
 #ifdef TELNET_DEBUG
 extern RemoteDebug Debug;
