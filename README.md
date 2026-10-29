@@ -48,12 +48,36 @@ Capture les trames SPI échangées avec l'unité intérieure (20 octets) : trame
 
 ## Matériel
 - ESP8266 (testé sur Wemos D1 mini) ou ESP32.
-- Raccordement au connecteur SPI de l'unité intérieure MHI (voir le projet MHI-AC-Ctrl pour le câblage).
+- Raccordement au connecteur SPI de l'unité intérieure MHI (voir le projet MHI-AC-Ctrl pour le détail du connecteur de la clim).
+
+| Signal | ESP8266 (D1 mini) | ESP32 |
+|---|---|---|
+| SCK | GPIO 14 (D5) | GPIO 18 |
+| MOSI | GPIO 13 (D7) | GPIO 23 |
+| MISO | GPIO 12 (D6) | GPIO 19 |
+
+Les broches sont définies dans `MHI-AC-Ctrl-core.h`. La sonde de température DS18B20 optionnelle se branche sur le GPIO 4 (D2 sur D1 mini), défini dans `support.h`.
+
+## Premier démarrage
+1. Sur une carte vierge, l'ESP ouvre un point d'accès WiFi nommé `Clim<nom>` (le nom par défaut est `RoomName`, donc `ClimRoomName`), avec le mot de passe `climatiseur`.
+2. Connecte-toi à ce point d'accès : le portail de configuration (WiFiManager) s'ouvre.
+3. Renseigne le réseau WiFi, l'adresse du serveur MQTT et ses identifiants, ainsi que le nom de la pièce et de l'appareil.
+4. L'ESP redémarre, se connecte au WiFi et publie ses données sur MQTT. L'interface web est alors accessible à son adresse IP.
+
+Les réglages sont conservés dans la mémoire de l'ESP (LittleFS), pas dans le dépôt Git.
+
+## Sécurité
+Des valeurs par défaut sont codées en dur dans le firmware. Change-les avant tout usage hors d'un réseau local de confiance :
+- **Page web** : identifiant `John` et mot de passe `Pass` (`webserver.cpp`, `aswebserver.cpp`).
+- **Point d'accès WiFi de configuration et mise à jour OTA** : mot de passe `climatiseur` (`setup.cpp`, variable `configPW`). Le même mot de passe sert à l'OTA.
+- Les identifiants MQTT sont saisis dans le portail de configuration et ne figurent pas dans le dépôt.
+
+N'expose pas l'ESP directement sur internet.
 
 ## Compilation et téléversement
 - Outil : Arduino IDE / `arduino-cli`.
 - Carte ESP8266 : `esp8266:esp8266:d1_mini`.
-- Bibliothèques : ArduinoJson (7.4.3), PubSubClient (2.8), NTPClient (3.2.1), RemoteDebug (3.0.5), WiFiManager 2.0.17 modifiée (copie fournie dans `libs/WiFiManager`).
+- Bibliothèques : ArduinoJson (7.4.3), PubSubClient (2.8), NTPClient (3.2.1), RemoteDebug (3.0.5), OneWire (2.3.8), DallasTemperature (4.0.6), WiFiManager 2.0.17 modifiée (copie fournie dans `libs/WiFiManager`).
 - Cartes : esp32 3.1.3 (carte `esp32:esp32:esp32doit-devkit-v1`) et esp8266 2.7.4 (`esp8266:esp8266:d1_mini`).
 - Le dossier du projet doit s'appeler `MHI-AC-CtrlServer` (comme le fichier `.ino`) : `git clone https://github.com/eljanoc/MHI_CTL_Server.git MHI-AC-CtrlServer`.
 
@@ -86,3 +110,9 @@ Ne pas considérer cette modification comme nécessaire pour l'ESP32 : elle rép
 
 ## Versions
 Les versions sont gérées avec Git (tags), par exemple `v4.25-trace`.
+
+## Crédits et licence
+- Ce projet est dérivé de [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) d'absalom-muc, publié sous licence MIT. Le décodage du protocole SPI MHI lui doit beaucoup.
+- [WiFiManager](https://github.com/tzapu/WiFiManager) de tzapu (licence MIT), copié dans `libs/WiFiManager` avec la correction ESP8266 décrite plus haut.
+- Bibliothèques tierces : ArduinoJson, PubSubClient, NTPClient, RemoteDebug, OneWire, DallasTemperature.
+- Ce dépôt n'a pas encore de fichier `LICENSE` propre ; en attendant, les conditions des licences MIT des projets d'origine s'appliquent.
