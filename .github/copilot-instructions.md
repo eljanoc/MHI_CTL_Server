@@ -15,6 +15,7 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 ## Compilation / téléversement
 - Outil : `arduino-cli` d'Arduino IDE (`C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe`).
 - ESP8266 : carte `esp8266:esp8266:d1_mini`. OTA via la tâche VS Code « OTA ESP8266 141 » (`.vscode\tasks.json`, IP 192.168.0.141, build dans `%TEMP%\MHI-ota-8266\build`).
+- ESP32 : carte `esp32:esp32:esp32doit-devkit-v1` (la carte générique `esp32` échoue : `LED_BUILTIN` absent). Build dans `%TEMP%\MHI-trace-32\build`. Téléversement USB sur COM3 : utiliser `UploadSpeed=115200` (921600 échoue).
 - Binaires produits dans `bin\` (ignorés par Git) : `MHI8266-V4.25.bin`, `MHI32-V4.25.bin`, `MHI32-V4.25-merged.bin`.
 
 ## Historique / décisions

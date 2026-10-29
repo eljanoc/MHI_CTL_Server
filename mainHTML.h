@@ -6,7 +6,7 @@ char MainHtml[] PROGMEM = R"====(
   <link rel="icon" href="data:,">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>Une page pour papa</title>
+  <title>MHI Clim</title>
   <style>
     body {
       background-color: rgb(30, 61, 86);
