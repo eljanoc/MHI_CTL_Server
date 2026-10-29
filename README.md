@@ -1,0 +1,71 @@
+# MHI-AC-CtrlServer (V4.25-trace)
+
+Firmware **ESP8266 / ESP32** qui pilote une climatisation **Mitsubishi Heavy Industries (MHI)** en se branchant sur son bus SPI interne (connecteur SPI de l'unité intérieure). Il la rend contrôlable et observable via **MQTT** (domotique, par exemple Jeedom) et via une **interface web** embarquée.
+
+Ce projet est une variante serveur de [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) enrichie d'un serveur web, d'une configuration en ligne et d'un système de trace des trames.
+
+## Buts du projet
+- Piloter la climatisation depuis une box domotique sans passer par la télécommande infrarouge.
+- Remonter en continu l'état de la clim et les données de fonctionnement des unités intérieure et extérieure.
+- Offrir une configuration simple, sans recompiler : WiFi, MQTT et paramètres depuis une page web.
+- Aider au diagnostic et à la compréhension du protocole grâce à la capture des trames brutes.
+
+## Fonctionnalités
+
+### Commandes (MQTT, topics `set/...`)
+- Marche / arrêt (`Power`)
+- Mode (`Mode`) : Auto, Cool, Dry, Fan, Heat, Stop
+- Température de consigne (`Tsetpoint`)
+- Vitesse du ventilateur (`Fan`)
+- Ailettes (`Vanes`, y compris Swing)
+- Température de la pièce fournie par une sonde externe (`Troom`)
+- Demande de données d'erreur / fonctionnement (`ErrOpData`) et `reset`
+
+### Mesures et états publiés (MQTT)
+- État : `Power`, `Mode`, `Fan`, `Vanes`, `Troom`, `Tsetpoint`, `Errorcode`
+- Unité intérieure : `RETURN-AIR`, `THI-R1/R2/R3`, `IU-FANSPEED`, `TOTAL-IU-RUN`
+- Unité extérieure : `OUTDOOR`, `COMP`, `TD`, `THO-R1`, `CT`, `TDSH`, `PROTECTION-NO`, `OU-FANSPEED`, `DEFROST`, `TOTAL-COMP-RUN`, `OU-EEV1`, `KWH`
+- Supervision du module : `connected`, `Version`, `RSSI`, `WIFI_LOST`, `MQTT_LOST`, `WIFI_BSSID`, `cmd_received`
+- Sonde de température optionnelle DS18B20 (`Tds1820`)
+
+### Interface web embarquée
+- Page principale : état et commandes de la clim.
+- Page de paramètres : configuration WiFi / MQTT, sauvegardée dans le système de fichiers (LittleFS), protégée par identifiant et mot de passe.
+- Actions : redémarrage, réinitialisation, ouverture de WiFiManager.
+
+### Connectivité et maintenance
+- Configuration WiFi par portail captif (WiFiManager).
+- Mise à jour du firmware à distance (OTA).
+- Heure par NTP.
+- Débogage à distance par Telnet (RemoteDebug).
+
+### Système de trace des trames
+Capture les trames SPI échangées avec l'unité intérieure (20 octets) : trames MOSI et MISO de chaque échange.
+- Activation par la case « Détection des trames » de la page web, ou par MQTT : `traceon` / `traceoff`.
+- Affichage des trames en direct dans la page web (historique de 64 trames, rafraîchi chaque seconde).
+- Publication des trames MOSI en hexadécimal sur le topic de debug `<debug>/trame`.
+- Compteur de trames perdues, indiqué à l'arrêt de la trace.
+
+## Matériel
+- ESP8266 (testé sur Wemos D1 mini) ou ESP32.
+- Raccordement au connecteur SPI de l'unité intérieure MHI (voir le projet MHI-AC-Ctrl pour le câblage).
+
+## Compilation et téléversement
+- Outil : Arduino IDE / `arduino-cli`.
+- Carte ESP8266 : `esp8266:esp8266:d1_mini`.
+- Bibliothèques : ArduinoJson, PubSubClient, NTPClient, WiFiManager (dans `libs/`), RemoteDebug.
+- Mise à jour OTA possible via la tâche VS Code « OTA ESP8266 141 » (voir `.vscode/tasks.json`).
+
+## Organisation du code
+| Fichier | Rôle |
+|---|---|
+| `MHI-AC-CtrlServer.ino` | Programme principal, callbacks MQTT, publication |
+| `MHI-AC-Ctrl-core.cpp/.h` | Dialogue SPI avec la clim, capture des trames |
+| `MHI-AC-Ctrl.h` | Noms des topics et textes MQTT |
+| `setup.cpp`, `loop.cpp` | Initialisation et boucle (WiFi, MQTT, commandes) |
+| `webserver.cpp`, `aswebserver.cpp` | Serveur web (synchrone / asynchrone) |
+| `mainHTML.h`, `paramHTML.h` | Pages web embarquées |
+| `support.cpp/.h`, `include.h` | Fonctions utilitaires et options de compilation |
+
+## Versions
+Les versions sont gérées avec Git (tags), par exemple `v4.25-trace`.
