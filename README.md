@@ -115,4 +115,4 @@ Les versions sont gérées avec Git (tags), par exemple `v4.25-trace`.
 - Ce projet est dérivé de [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) d'absalom-muc, publié sous licence MIT. Le décodage du protocole SPI MHI lui doit beaucoup.
 - [WiFiManager](https://github.com/tzapu/WiFiManager) de tzapu (licence MIT), copié dans `libs/WiFiManager` avec la correction ESP8266 décrite plus haut.
 - Bibliothèques tierces : ArduinoJson, PubSubClient, NTPClient, RemoteDebug, OneWire, DallasTemperature.
-- Ce dépôt n'a pas encore de fichier `LICENSE` propre ; en attendant, les conditions des licences MIT des projets d'origine s'appliquent.
+- Ce dépôt est publié sous licence MIT (voir [LICENSE](LICENSE)), qui conserve la mention de copyright du projet d'origine.
