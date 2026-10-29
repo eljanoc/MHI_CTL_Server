@@ -111,6 +111,9 @@ Ne pas considérer cette modification comme nécessaire pour l'ESP32 : elle rép
 ## Versions
 Les versions sont gérées avec Git (tags), par exemple `v4.25-trace`.
 
+## Remerciements
+Un grand merci à **absalom-muc** pour [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) : son travail de décodage du protocole SPI des climatisations Mitsubishi Heavy, et sa publication en open source, sont à l'origine de ce projet. Merci aussi à **tzapu** pour WiFiManager et aux auteurs des bibliothèques utilisées.
+
 ## Crédits et licence
 - Ce projet est dérivé de [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) d'absalom-muc, publié sous licence MIT. Le décodage du protocole SPI MHI lui doit beaucoup.
 - [WiFiManager](https://github.com/tzapu/WiFiManager) de tzapu (licence MIT), copié dans `libs/WiFiManager` avec la correction ESP8266 décrite plus haut.
