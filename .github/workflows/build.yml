@@ -1,0 +1,80 @@
+name: Build firmware
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: esp8266
+            core: esp8266:esp8266@2.7.4
+            fqbn: esp8266:esp8266:d1_mini
+          - name: esp32
+            core: esp32:esp32@3.1.3
+            fqbn: esp32:esp32:esp32doit-devkit-v1
+    steps:
+      # The sketch folder must have the same name as the .ino file
+      - uses: actions/checkout@v4
+        with:
+          path: MHI-AC-CtrlServer
+
+      - uses: arduino/setup-arduino-cli@v2
+
+      - name: Install board package and libraries
+        run: |
+          arduino-cli config init
+          arduino-cli config set board_manager.additional_urls https://arduino.esp8266.com/stable/package_esp8266com_index.json https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install "${{ matrix.core }}"
+          arduino-cli lib install "ArduinoJson@7.4.3" "PubSubClient@2.8" "NTPClient@3.2.1" "RemoteDebug@3.0.5" "OneWire@2.3.8" "DallasTemperature@4.0.6"
+
+      - name: Compile
+        run: |
+          arduino-cli compile \
+            --fqbn "${{ matrix.fqbn }}" \
+            --library MHI-AC-CtrlServer/libs/WiFiManager \
+            --output-dir out \
+            MHI-AC-CtrlServer
+
+      - name: Name the binaries
+        run: |
+          mkdir release
+          cp out/MHI-AC-CtrlServer.ino.bin "release/MHI-${{ matrix.name }}-${{ github.ref_name }}.bin"
+          if [ "${{ matrix.name }}" = "esp32" ]; then
+            cp out/MHI-AC-CtrlServer.ino.merged.bin "release/MHI-${{ matrix.name }}-${{ github.ref_name }}-merged.bin"
+          fi
+          ls -l release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.name }}
+          path: release/*.bin
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" release/*.bin \
+            --repo "${{ github.repository }}" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes
