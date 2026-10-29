@@ -1,54 +1,54 @@
 # MHI-AC-CtrlServer (V4.25-trace)
 
-Firmware **ESP8266 / ESP32** qui pilote une climatisation **Mitsubishi Heavy Industries (MHI)** en se branchant sur son bus SPI interne (connecteur SPI de l'unité intérieure). Il la rend contrôlable et observable via **MQTT** (domotique, par exemple Jeedom) et via une **interface web** embarquée.
+**ESP8266 / ESP32** firmware that controls a **Mitsubishi Heavy Industries (MHI)** air conditioner by connecting to the SPI bus of its indoor unit. It makes the unit controllable and observable through **MQTT** (home automation, e.g. Jeedom) and an embedded **web interface**.
 
-Ce projet est une variante serveur de [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) enrichie d'un serveur web, d'une configuration en ligne et d'un système de trace des trames.
+This project is a server variant of [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl), extended with a web server, online configuration and a frame trace system.
 
-## Buts du projet
-- Piloter la climatisation depuis une box domotique sans passer par la télécommande infrarouge.
-- Remonter en continu l'état de la clim et les données de fonctionnement des unités intérieure et extérieure.
-- Offrir une configuration simple, sans recompiler : WiFi, MQTT et paramètres depuis une page web.
-- Aider au diagnostic et à la compréhension du protocole grâce à la capture des trames brutes.
+## Goals
+- Control the air conditioner from a home automation box without using the infrared remote.
+- Continuously report the state of the unit and the operating data of the indoor and outdoor units.
+- Offer simple configuration without recompiling: WiFi, MQTT and settings from a web page.
+- Help with diagnosis and understanding of the protocol by capturing raw frames.
 
-## Fonctionnalités
+## Features
 
-### Commandes (MQTT, topics `set/...`)
-- Marche / arrêt (`Power`)
-- Mode (`Mode`) : Auto, Cool, Dry, Fan, Heat, Stop
-- Température de consigne (`Tsetpoint`)
-- Vitesse du ventilateur (`Fan`)
-- Ailettes (`Vanes`, y compris Swing)
-- Température de la pièce fournie par une sonde externe (`Troom`)
-- Demande de données d'erreur / fonctionnement (`ErrOpData`) et `reset`
+### Commands (MQTT, `set/...` topics)
+- Power on / off (`Power`)
+- Mode (`Mode`): Auto, Cool, Dry, Fan, Heat, Stop
+- Setpoint temperature (`Tsetpoint`)
+- Fan speed (`Fan`)
+- Vanes (`Vanes`, including Swing)
+- Room temperature provided by an external sensor (`Troom`)
+- Request for error / operating data (`ErrOpData`) and `reset`
 
-### Mesures et états publiés (MQTT)
-- État : `Power`, `Mode`, `Fan`, `Vanes`, `Troom`, `Tsetpoint`, `Errorcode`
-- Unité intérieure : `RETURN-AIR`, `THI-R1/R2/R3`, `IU-FANSPEED`, `TOTAL-IU-RUN`
-- Unité extérieure : `OUTDOOR`, `COMP`, `TD`, `THO-R1`, `CT`, `TDSH`, `PROTECTION-NO`, `OU-FANSPEED`, `DEFROST`, `TOTAL-COMP-RUN`, `OU-EEV1`, `KWH`
-- Supervision du module : `connected`, `Version`, `RSSI`, `WIFI_LOST`, `MQTT_LOST`, `WIFI_BSSID`, `cmd_received`
-- Sonde de température optionnelle DS18B20 (`Tds1820`)
+### Published measurements and states (MQTT)
+- State: `Power`, `Mode`, `Fan`, `Vanes`, `Troom`, `Tsetpoint`, `Errorcode`
+- Indoor unit: `RETURN-AIR`, `THI-R1/R2/R3`, `IU-FANSPEED`, `TOTAL-IU-RUN`
+- Outdoor unit: `OUTDOOR`, `COMP`, `TD`, `THO-R1`, `CT`, `TDSH`, `PROTECTION-NO`, `OU-FANSPEED`, `DEFROST`, `TOTAL-COMP-RUN`, `OU-EEV1`, `KWH`
+- Module supervision: `connected`, `Version`, `RSSI`, `WIFI_LOST`, `MQTT_LOST`, `WIFI_BSSID`, `cmd_received`
+- Optional DS18B20 temperature sensor (`Tds1820`)
 
-### Interface web embarquée
-- Page principale : état et commandes de la clim.
-- Page de paramètres : configuration WiFi / MQTT, sauvegardée dans le système de fichiers (LittleFS), protégée par identifiant et mot de passe.
-- Actions : redémarrage, réinitialisation, ouverture de WiFiManager.
+### Embedded web interface
+- Main page: state and controls of the air conditioner.
+- Settings page: WiFi / MQTT configuration, stored in the file system (LittleFS), protected by a login and password.
+- Actions: restart, reset, open WiFiManager.
 
-### Connectivité et maintenance
-- Configuration WiFi par portail captif (WiFiManager).
-- Mise à jour du firmware à distance (OTA).
-- Heure par NTP.
-- Débogage à distance par Telnet (RemoteDebug).
+### Connectivity and maintenance
+- WiFi configuration through a captive portal (WiFiManager).
+- Remote firmware update (OTA).
+- Time synchronization through NTP.
+- Remote debugging over Telnet (RemoteDebug).
 
-### Système de trace des trames
-Capture les trames SPI échangées avec l'unité intérieure (20 octets) : trames MOSI et MISO de chaque échange.
-- Activation par la case « Détection des trames » de la page web, ou par MQTT : `traceon` / `traceoff`.
-- Affichage des trames en direct dans la page web (historique de 64 trames, rafraîchi chaque seconde).
-- Publication des trames MOSI en hexadécimal sur le topic de debug `<debug>/trame`.
-- Compteur de trames perdues, indiqué à l'arrêt de la trace.
+### Frame trace system
+Captures the SPI frames exchanged with the indoor unit (20 bytes): the MOSI and MISO frames of each exchange.
+- Enabled with the "Détection des trames" checkbox on the web page, or through MQTT: `traceon` / `traceoff`.
+- Live display of the frames in the web page (history of 64 frames, refreshed every second).
+- MOSI frames published in hexadecimal on the debug topic `<debug>/trame`.
+- Dropped frames counter, reported when the trace is stopped.
 
-## Matériel
-- ESP8266 (testé sur Wemos D1 mini) ou ESP32.
-- Raccordement au connecteur SPI de l'unité intérieure MHI (voir le projet MHI-AC-Ctrl pour le détail du connecteur de la clim).
+## Hardware
+- ESP8266 (tested on Wemos D1 mini) or ESP32.
+- Connection to the SPI connector of the MHI indoor unit (see the MHI-AC-Ctrl project for the details of the air conditioner connector).
 
 | Signal | ESP8266 (D1 mini) | ESP32 |
 |---|---|---|
@@ -56,66 +56,67 @@ Capture les trames SPI échangées avec l'unité intérieure (20 octets) : trame
 | MOSI | GPIO 13 (D7) | GPIO 23 |
 | MISO | GPIO 12 (D6) | GPIO 19 |
 
-Les broches sont définies dans `MHI-AC-Ctrl-core.h`. La sonde de température DS18B20 optionnelle se branche sur le GPIO 4 (D2 sur D1 mini), défini dans `support.h`.
+The pins are defined in `MHI-AC-Ctrl-core.h`. The optional DS18B20 temperature sensor connects to GPIO 4 (D2 on the D1 mini), defined in `support.h`.
 
-## Premier démarrage
-1. Sur une carte vierge, l'ESP ouvre un point d'accès WiFi nommé `Clim<nom>` (le nom par défaut est `RoomName`, donc `ClimRoomName`), avec le mot de passe `climatiseur`.
-2. Connecte-toi à ce point d'accès : le portail de configuration (WiFiManager) s'ouvre.
-3. Renseigne le réseau WiFi, l'adresse du serveur MQTT et ses identifiants, ainsi que le nom de la pièce et de l'appareil.
-4. L'ESP redémarre, se connecte au WiFi et publie ses données sur MQTT. L'interface web est alors accessible à son adresse IP.
+## First start
+1. On a blank board, the ESP opens a WiFi access point named `Clim<name>` (the default name is `RoomName`, so `ClimRoomName`), with the password `climatiseur`.
+2. Connect to this access point: the configuration portal (WiFiManager) opens.
+3. Enter the WiFi network, the MQTT server address and its credentials, as well as the room and device names.
+4. The ESP restarts, connects to the WiFi and publishes its data on MQTT. The web interface is then available at its IP address.
 
-Les réglages sont conservés dans la mémoire de l'ESP (LittleFS), pas dans le dépôt Git.
+The settings are stored in the ESP memory (LittleFS), not in the Git repository.
 
-## Sécurité
-Des valeurs par défaut sont codées en dur dans le firmware. Change-les avant tout usage hors d'un réseau local de confiance :
-- **Page web** : identifiant `John` et mot de passe `Pass` (`webserver.cpp`, `aswebserver.cpp`).
-- **Point d'accès WiFi de configuration et mise à jour OTA** : mot de passe `climatiseur` (`setup.cpp`, variable `configPW`). Le même mot de passe sert à l'OTA.
-- Les identifiants MQTT sont saisis dans le portail de configuration et ne figurent pas dans le dépôt.
+## Security
+Default values are hard-coded in the firmware. Change them before any use outside a trusted local network:
+- **Web page**: login `John` and password `Pass` (`webserver.cpp`, `aswebserver.cpp`).
+- **Configuration WiFi access point and OTA update**: password `climatiseur` (`setup.cpp`, variable `configPW`). The same password is used for OTA.
+- MQTT credentials are entered in the configuration portal and are not part of the repository.
 
-N'expose pas l'ESP directement sur internet.
+Do not expose the ESP directly to the internet.
 
-## Compilation et téléversement
-- Outil : Arduino IDE / `arduino-cli`.
-- Carte ESP8266 : `esp8266:esp8266:d1_mini`.
-- Bibliothèques : ArduinoJson (7.4.3), PubSubClient (2.8), NTPClient (3.2.1), RemoteDebug (3.0.5), OneWire (2.3.8), DallasTemperature (4.0.6), WiFiManager 2.0.17 modifiée (copie fournie dans `libs/WiFiManager`).
-- Cartes : esp32 3.1.3 (carte `esp32:esp32:esp32doit-devkit-v1`) et esp8266 2.7.4 (`esp8266:esp8266:d1_mini`).
-- Le dossier du projet doit s'appeler `MHI-AC-CtrlServer` (comme le fichier `.ino`) : `git clone https://github.com/eljanoc/MHI_CTL_Server.git MHI-AC-CtrlServer`.
+## Build and upload
+- Tool: Arduino IDE / `arduino-cli`.
+- ESP8266 board: `esp8266:esp8266:d1_mini`.
+- Libraries: ArduinoJson (7.4.3), PubSubClient (2.8), NTPClient (3.2.1), RemoteDebug (3.0.5), OneWire (2.3.8), DallasTemperature (4.0.6), modified WiFiManager 2.0.17 (copy provided in `libs/WiFiManager`).
+- Board packages: esp32 3.1.3 (board `esp32:esp32:esp32doit-devkit-v1`) and esp8266 2.7.4 (`esp8266:esp8266:d1_mini`). The generic `esp32` board does not compile (`LED_BUILTIN` is missing).
+- The project folder must be named `MHI-AC-CtrlServer` (same as the `.ino` file): `git clone https://github.com/eljanoc/MHI_CTL_Server.git MHI-AC-CtrlServer`.
 
-### Correction de WiFiManager pour ESP8266 uniquement
-Cette correction concerne uniquement les builds ESP8266. Avec WiFiManager 2.0.17 officielle, `getMenuOut()` compare directement `_menutokens[menuId]` (chaîne en mémoire flash) à une chaîne, ce qui provoquait un redémarrage en boucle environ une minute après le démarrage de l'ESP8266. Il faut convertir via `__FlashStringHelper`. Dans `WiFiManager.cpp`, fonction `WiFiManager::getMenuOut()` (vers la ligne 1442), remplacer :
+### WiFiManager fix for ESP8266 only
+This fix only concerns ESP8266 builds. With the official WiFiManager 2.0.17, `getMenuOut()` directly compares `_menutokens[menuId]` (a string stored in flash memory) with a string, which caused the ESP8266 to reboot in a loop about one minute after startup. The value must be converted through `__FlashStringHelper`. In `WiFiManager.cpp`, function `WiFiManager::getMenuOut()` (around line 1442), replace:
 ```cpp
 if((String)_menutokens[menuId] == "param" && _paramsCount == 0) continue;
 if((String)_menutokens[menuId] == "custom" && _customMenuHTML!=NULL){
 ```
-par :
+with:
 ```cpp
 if((String)(__FlashStringHelper *)(_menutokens[menuId]) == "param" && _paramsCount == 0) continue;
 if((String)(__FlashStringHelper *)(_menutokens[menuId]) == "custom" && _customMenuHTML!=NULL){
 ```
-La correction est déjà appliquée dans `libs/WiFiManager` du projet et dans la bibliothèque installée (`Documents\Arduino\libraries\WiFiManager`). Si WiFiManager est réinstallée ou mise à jour, il faut la refaire.
-Ne pas considérer cette modification comme nécessaire pour l'ESP32 : elle répond au problème observé sur ESP8266 uniquement.
+The fix is already applied in the project's `libs/WiFiManager` and in the installed library (`Documents\Arduino\libraries\WiFiManager`). If WiFiManager is reinstalled or updated, it must be applied again.
+This change is not needed for the ESP32: it addresses the problem observed on ESP8266 only.
 
-- Mise à jour OTA possible via la tâche VS Code « OTA ESP8266 141 » (voir `.vscode/tasks.json`).
+### OTA update
+OTA update is possible through the VS Code task "OTA ESP8266 141" (see `.vscode/tasks.json`). It contains the IP address of the author's device and a masked password (`******`): adapt both to your setup.
 
-## Organisation du code
-| Fichier | Rôle |
+## Code organization
+| File | Role |
 |---|---|
-| `MHI-AC-CtrlServer.ino` | Programme principal, callbacks MQTT, publication |
-| `MHI-AC-Ctrl-core.cpp/.h` | Dialogue SPI avec la clim, capture des trames |
-| `MHI-AC-Ctrl.h` | Noms des topics et textes MQTT |
-| `setup.cpp`, `loop.cpp` | Initialisation et boucle (WiFi, MQTT, commandes) |
-| `webserver.cpp`, `aswebserver.cpp` | Serveur web (synchrone / asynchrone) |
-| `mainHTML.h`, `paramHTML.h` | Pages web embarquées |
-| `support.cpp/.h`, `include.h` | Fonctions utilitaires et options de compilation |
+| `MHI-AC-CtrlServer.ino` | Main program, MQTT callbacks, publishing |
+| `MHI-AC-Ctrl-core.cpp/.h` | SPI dialogue with the air conditioner, frame capture |
+| `MHI-AC-Ctrl.h` | MQTT topic names and texts |
+| `setup.cpp`, `loop.cpp` | Initialization and main loop (WiFi, MQTT, commands) |
+| `webserver.cpp`, `aswebserver.cpp` | Web server (synchronous / asynchronous) |
+| `mainHTML.h`, `paramHTML.h` | Embedded web pages |
+| `support.cpp/.h`, `include.h` | Utility functions and build options |
 
 ## Versions
-Les versions sont gérées avec Git (tags), par exemple `v4.25-trace`.
+Versions are managed with Git tags, for example `v4.25-trace`.
 
-## Remerciements
-Un grand merci à **absalom-muc** pour [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) : son travail de décodage du protocole SPI des climatisations Mitsubishi Heavy, et sa publication en open source, sont à l'origine de ce projet. Merci aussi à **tzapu** pour WiFiManager et aux auteurs des bibliothèques utilisées.
+## Acknowledgments
+Many thanks to **absalom-muc** for [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl): his work decoding the SPI protocol of Mitsubishi Heavy air conditioners, and releasing it as open source, is the origin of this project. Thanks also to **tzapu** for WiFiManager and to the authors of the libraries used.
 
-## Crédits et licence
-- Ce projet est dérivé de [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) d'absalom-muc, publié sous licence MIT. Le décodage du protocole SPI MHI lui doit beaucoup.
-- [WiFiManager](https://github.com/tzapu/WiFiManager) de tzapu (licence MIT), copié dans `libs/WiFiManager` avec la correction ESP8266 décrite plus haut.
-- Bibliothèques tierces : ArduinoJson, PubSubClient, NTPClient, RemoteDebug, OneWire, DallasTemperature.
-- Ce dépôt est publié sous licence MIT (voir [LICENSE](LICENSE)), qui conserve la mention de copyright du projet d'origine.
+## Credits and license
+- This project is derived from [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) by absalom-muc, released under the MIT license. The decoding of the MHI SPI protocol owes a lot to it.
+- [WiFiManager](https://github.com/tzapu/WiFiManager) by tzapu (MIT license), copied into `libs/WiFiManager` with the ESP8266 fix described above.
+- Third-party libraries: ArduinoJson, PubSubClient, NTPClient, RemoteDebug, OneWire, DallasTemperature.
+- This repository is released under the MIT license (see [LICENSE](LICENSE)), which keeps the copyright notice of the original project.
