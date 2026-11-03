@@ -152,8 +152,14 @@ static void webServerTaskSetup() {
   });
 
   webServer.on("/param_data",[]() {
-    char tmp[800];
-    webServer.send(200, "text/html", getParametersString(tmp, sizeof(tmp)));
+    const size_t capacity = 4096;
+    char *tmp = (char *)malloc(capacity);
+    if (!tmp) {
+      webServer.send(500, "text/plain", "Out of memory");
+      return;
+    }
+    webServer.send(200, "text/html", getParametersString(tmp, capacity));
+    free(tmp);
   });
 
   webServer.on("/trace", HTTP_POST, []() {

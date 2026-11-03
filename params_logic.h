@@ -97,7 +97,8 @@ inline bool mqttDisabled(const char *enabled, const char *server) {
   return enabled[0] == '0' || server[0] == '\0' || strcmp(server, "0.0.0.0") == 0;
 }
 
-// Début de /param_data : les 10 champs, mqtt_enabled en 10e position
+// Début de /param_data : les 10 champs, mqtt_enabled en 10e position.
+// Chaque réseau Wi-Fi ajoute ensuite le triplet ssid, mot de passe, RSSI.
 inline void buildParamsBase(char *out, size_t size, const char *staticIP, const char *masqueIP,
                             const char *gatewayIP, const char *dnsIP, const char *mqtt_server,
                             const char *mqtt_port, const char *wifiTimeout, const char *Room,

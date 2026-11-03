@@ -40,8 +40,8 @@ char ParamHtml[] PROGMEM = R"====(
       <tr>
         <td style="text-align:justify" ;>SSID:</td>
         <td><label for="ssid1"></label>
-            <input id="ssid3" style="font-weight: bold;background-color: rgb(189, 202, 238)" list=ssid2 name="ssidName">
-            <datalist id="ssid2"></datalist>
+            <input id="ssid3" style="font-weight: bold;background-color: rgb(189, 202, 238)" name="ssidName" size="13">
+            <select id="ssid2" onchange="SetSSID()" style="width:24px;"></select>
         </td>        
         <!--td>
           <input type="text" style="font-weight: bold;background-color: rgb(189, 202, 238)" id="ssid" name="ssid" size="20" />
@@ -147,6 +147,7 @@ char ParamHtml[] PROGMEM = R"====(
 const  char ParamJS[] PROGMEM= R"====(
 var SIMUL = false;
 var saveSSID='';
+var savePass='';
 function myFunction() {
   var x = document.getElementById("password");
   if (x.type === "password") {
@@ -162,9 +163,11 @@ function loadPage ()
 }
 
 function SetSSID() {
-  var doc = document.getElementById('ssid2');
-  var name = doc.name;
-  var option = doc.innerHTML;
+  var sel = document.getElementById('ssid2');
+  if (!sel.value) return;
+  document.getElementById('ssid3').value = sel.value;
+  document.getElementById('password').value = (sel.value == saveSSID) ? savePass : '';
+  sel.selectedIndex = 0;
 }
 
 function restart(mode) {
@@ -217,15 +220,19 @@ function LoadData() {
         showMqtt();
       
         var dynamicSelect = document.getElementById("ssid2");
-        for (let i = 10,j=0; i < message.length; i+=2,j++) {
+        dynamicSelect.innerHTML = "";
+        // première option vide : la flèche reste visible sans afficher de réseau sélectionné
+        dynamicSelect.appendChild(document.createElement("option"));
+        for (let i = 10; i + 2 < message.length; i += 3) {
           let opt = document.createElement("option");
           opt.value = message[i];
-//          opt.innerHTML = message[i]; 
+          opt.textContent = message[i] + " (" + message[i + 2] + " dBm)";
           dynamicSelect.appendChild(opt);
           if (message[i+1]!="")
           {
             document.getElementById('password').value=message[i+1];
             saveSSID=message[i];
+            savePass=message[i+1];
             document.getElementById("ssid3").placeholder=message[i];
           }
         }
