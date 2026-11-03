@@ -8,6 +8,7 @@ char gatewayIP[16] = "0.0.0.0";
 char dnsIP[16] = "0.0.0.0";
 char mqtt_server[16] = "192.168.0.42";
 char mqtt_port[9] = "1883";
+char mqtt_enabled[2] = "1";  //"1" = MQTT actif, "0" = désactivé (mode autonome)
 char mqtt_user[20] = "";
 char mqtt_pass[20] = "";
 char wifiTimeout[3] = "5";  //Timeout in minutes (max. 99) before WiFi configuration portal is turned off and the ESP tries to connect again to the previously configured AP (if any)
@@ -81,8 +82,8 @@ void listNetworks() {
 
 char *getParametersString (char *tmp, size_t size)
 {
-  snprintf(tmp, size, "%s?%s?%s?%s?%s?%s?%s?%s?%s",
-        staticIP,masqueIP,gatewayIP,dnsIP,mqtt_server,mqtt_port,wifiTimeout,Room,Thing);
+  snprintf(tmp, size, "%s?%s?%s?%s?%s?%s?%s?%s?%s?%s",
+        staticIP,masqueIP,gatewayIP,dnsIP,mqtt_server,mqtt_port,wifiTimeout,Room,Thing,mqtt_enabled);
   int numSsid = WiFi.scanNetworks();
   if (numSsid > 0) 
   // print the network number and name for each network found:
@@ -117,7 +118,7 @@ void saveJson (bool f){
   DynamicJsonBuffer jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
 #else
-  DynamicJsonDocument json(400);
+  DynamicJsonDocument json(512);
 #endif
 
 
@@ -127,6 +128,7 @@ void saveJson (bool f){
   json["dnsIP"]= dnsIP;
   json["mqtt_server"]= mqtt_server;
   json["mqtt_port"]= mqtt_port;
+  json["mqtt_enabled"]= mqtt_enabled;
   json["mqtt_user"]= mqtt_user;
   json["mqtt_pass"]= mqtt_pass;
   json["wifiTimeout"]= wifiTimeout;
@@ -201,7 +203,7 @@ void newParams() {
   for (const char *c = param; *c; c++)
     if (*c == '?')
       nbSep++;
-  if (nbSep < 9) {  // les 9 premiers champs doivent être présents
+  if (nbSep < 10) {  // les 10 premiers champs doivent être présents
     webServer.send(400, "text/plain", "400: Invalid Request");
     return;
   }
@@ -223,6 +225,7 @@ Serial.printf("rest1:%s\n",sd);
   s=strchr (sd,'?');*s=0;COPY_STR(wifiTimeout,sd);sd=s+1;
   s=strchr (sd,'?');*s=0;COPY_STR(Room,sd);sd=s+1;
   s=strchr (sd,'?');*s=0;COPY_STR(Thing,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;strlcpy(mqtt_enabled, (*sd=='0') ? "0" : "1", sizeof(mqtt_enabled));sd=s+1;
   s=strchr (sd,'?');
   PreloadSSID[0]=0;
   PreloadPSW[0]=0;
@@ -394,6 +397,8 @@ void setup() {
             COPY_STR(dnsIP, json["dnsIP"] | "");
             COPY_STR(mqtt_server, json["mqtt_server"] | "");
             COPY_STR(mqtt_port, json["mqtt_port"] | "");
+            // Absent des anciens config.json : MQTT actif par défaut
+            COPY_STR(mqtt_enabled, (json["mqtt_enabled"] | "1")[0] == '0' ? "0" : "1");
             COPY_STR(mqtt_user, json["mqtt_user"] | "");
             COPY_STR(mqtt_pass, json["mqtt_pass"] | "");
             COPY_STR(wifiTimeout, json["wifiTimeout"] | "");

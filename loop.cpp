@@ -20,6 +20,7 @@ extern char staticIP[16];
 extern char masqueIP[16];
 extern char gatewayIP[16];
 extern char mqtt_server[16];
+extern char mqtt_enabled[2];
 extern char mqtt_port[9];
 extern char mqtt_user[20];
 extern char mqtt_pass[20];
@@ -422,8 +423,10 @@ void loop() {
 
   static unsigned long lastMQTTReconnectMillis = 0;
   static bool mqttReconnectAttempted = false;
-  // Serveur MQTT vide ou 0.0.0.0 : MQTT désactivé, mode autonome (aucune tentative, pas de redémarrage)
-  bool mqttDisabled = (mqtt_server[0] == '\0' || strcmp(mqtt_server, "0.0.0.0") == 0);
+  // MQTT désactivé (case décochée), serveur vide ou 0.0.0.0 : mode autonome, aucune tentative ni redémarrage
+  bool mqttDisabled = (mqtt_enabled[0] == '0' || mqtt_server[0] == '\0' || strcmp(mqtt_server, "0.0.0.0") == 0);
+  if (mqttDisabled && strcmp(MQTTconnectedFlag, "off") != 0)
+    strcpy(MQTTconnectedFlag, "off");
   if (!mqttDisabled && !MQTTclient.connected() &&
       (!mqttReconnectAttempted || curMillis - lastMQTTReconnectMillis >= 5000)) {
 #ifdef SERIAL_DEBUG

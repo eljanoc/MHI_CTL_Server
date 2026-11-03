@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.30-trace)
+# MHI-AC-CtrlServer (V4.31-trace)
 
 [English](README.md) | **Français**
 
@@ -131,6 +131,9 @@ La mise à jour OTA est possible via la tâche VS Code « OTA ESP8266 141 » (vo
 
 ## Versions
 Les versions sont gérées avec des tags Git, par exemple `v4.25-trace`.
+
+### V4.31
+Nouvelle case « MQTT actif » dans la page de configuration (clé `mqtt_enabled` du `config.json`, activée par défaut). Décochée, le module fonctionne en autonome sans aucune tentative MQTT (affiché `off`). Un serveur vide ou `0.0.0.0` désactive toujours MQTT. `/param_data` et `/NewParam` ont un 10e champ (après `Thing`) ; la liste Wi-Fi commence maintenant à l'index 10.
 
 ### V4.30
 Correction de débordements de tampon : la liste des réseaux Wi-Fi (`/param_data`) débordait d'un tampon de 200 octets dès que plusieurs réseaux étaient à portée, la route de réglage (`/SetValue`) utilisait un tampon de 30 octets pour le topic, et `/NewParam` plantait sur une requête mal formée. Toutes les copies de chaînes sont maintenant bornées, et `/NewParam` répond 400 si les données sont invalides.

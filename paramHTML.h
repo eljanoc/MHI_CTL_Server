@@ -88,6 +88,12 @@ char ParamHtml[] PROGMEM = R"====(
         </td>
       </tr>
       <tr>
+        <td style="text-align:justify" ;>MQTT actif</td>
+        <td>
+          <input type="checkbox" id="mqttEnabled" name="mqttEnabled" checked />
+        </td>
+      </tr>
+      <tr>
         <td style="text-align:justify" ;>MQTT IP</td>
         <td>
           <input type="text" style="font-weight: bold;background-color: rgb(189, 202, 238)" id="mqttIP" name="mqttIP" size="13" />
@@ -201,9 +207,10 @@ function LoadData() {
         document.getElementById('wifiTimeout').value=message[6];
         document.getElementById('room').value=message[7];
         document.getElementById('thing').value=message[8];
+        document.getElementById('mqttEnabled').checked=(message[9]!='0');
       
         var dynamicSelect = document.getElementById("ssid2");
-        for (let i = 9,j=0; i < message.length; i+=2,j++) {
+        for (let i = 10,j=0; i < message.length; i+=2,j++) {
           let opt = document.createElement("option");
           opt.value = message[i];
 //          opt.innerHTML = message[i]; 
@@ -241,6 +248,7 @@ function saveParam() {
     document.getElementById('wifiTimeout').value+'?'+
     document.getElementById('room').value+'?'+
     document.getElementById('thing').value+'?'+
+    (document.getElementById('mqttEnabled').checked ? '1' : '0')+'?'+
     document.getElementById("ssid3").value+'?'+
     document.getElementById("password").value+'?';
 
