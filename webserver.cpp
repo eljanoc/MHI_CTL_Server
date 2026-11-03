@@ -42,11 +42,11 @@ void newValue() {
     Serial.println("Name:" + webServer.argName(i));
     Serial.println("Value:" + webServer.arg(i));
 #endif
-    char topic[30];
+    char topic[128];
     String tmpName = webServer.argName(i);
     String payload = webServer.arg(i);
 
-    sprintf(topic, "%s%s", MQTT_SET_PREFIX, tmpName.c_str());
+    snprintf(topic, sizeof(topic), "%s%s", MQTT_SET_PREFIX, tmpName.c_str());
 #ifdef TELNET_DEBUG
     Debug.printf("%s:%s\n", topic, payload.c_str());
 #endif
@@ -81,8 +81,8 @@ bool verifAuthor() {  // If a POST request is made to URI /login
 
 extern int stateFlag;
 /********************************** Core 0 ***********************************/
-char *getWebValuesString(char *);
-char *getParametersString(char *);
+char *getWebValuesString(char *, size_t);
+char *getParametersString(char *, size_t);
 void newParams(void);
 static void webServerTaskSetup() {
 
@@ -148,13 +148,13 @@ static void webServerTaskSetup() {
   webServer.on("/SetValue", newValue);
 
   webServer.on("/ajax_data",[]() {
-    char tmp[200];
-    webServer.send(200, "text/html", getWebValuesString(tmp));
+    char tmp[400];
+    webServer.send(200, "text/html", getWebValuesString(tmp, sizeof(tmp)));
   });
 
   webServer.on("/param_data",[]() {
-    char tmp[200];
-    webServer.send(200, "text/html", getParametersString(tmp));
+    char tmp[800];
+    webServer.send(200, "text/html", getParametersString(tmp, sizeof(tmp)));
   });
 
   webServer.on("/trace", HTTP_POST, []() {

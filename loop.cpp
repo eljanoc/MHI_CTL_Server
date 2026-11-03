@@ -137,7 +137,7 @@ void sendConnexion2mqtt(bool start) {
     tReboot = *tcur;
 
   String ip = WiFi.localIP().toString();
-  sprintf(msg, "%s num:%d,%dh:%02d  %d/%d/%d, last reboot:%dh:%02d  %d/%d/%d\n SSID:%s, ip:%s, MQTT:%s:%s, deconnect:%d\n",
+  snprintf(msg, sizeof(msg), "%s num:%d,%dh:%02d  %d/%d/%d, last reboot:%dh:%02d  %d/%d/%d\n SSID:%s, ip:%s, MQTT:%s:%s, deconnect:%d\n",
           Thing, myConnexionCount++,
           tcur->tm_hour,    /* Hours.   [0-23]      */
           tcur->tm_min,     /* Minutes. [0-59]      */
@@ -468,7 +468,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
   }
 
   if (char *value=strstr((const char *)payload, "puissance=")) {
-    sprintf(webPuissance,"%sW",value+strlen("puissance="));
+    snprintf(webPuissance, sizeof(webPuissance), "%sW", value+strlen("puissance="));
 #ifdef SERIAL_DEBUG
     Serial.printf("webPuissance=%s\n",webPuissance);
 #endif
@@ -479,8 +479,9 @@ void TopicService(unsigned char *payload, unsigned int length) {
   }
 
   if (strstr((const char *)payload, "ipSalon:\"")) {
-    strcpy(webIpSalon,(const char *)&payload[strlen("ipSalon:\"")]);
-    webIpSalon[strlen(webIpSalon)-1]=0;
+    COPY_STR(webIpSalon,(const char *)&payload[strlen("ipSalon:\"")]);
+    if (webIpSalon[0])
+      webIpSalon[strlen(webIpSalon)-1]=0;
 #ifdef SERIAL_DEBUG
     Serial.printf("webIpSalon:%s\n",webIpSalon);
 #endif
@@ -491,8 +492,9 @@ void TopicService(unsigned char *payload, unsigned int length) {
   }
 
   if (strstr((const char *)payload, "ipChNO:\"")) {
-    strcpy(webIpChNO,(const char *)&payload[strlen("ipChNO:\"")]);
-    webIpChNO[strlen(webIpChNO)-1]=0;
+    COPY_STR(webIpChNO,(const char *)&payload[strlen("ipChNO:\"")]);
+    if (webIpChNO[0])
+      webIpChNO[strlen(webIpChNO)-1]=0;
 #ifdef SERIAL_DEBUG
     Serial.printf("webIpChNO:%s\n",webIpChNO);
 #endif
@@ -503,8 +505,9 @@ void TopicService(unsigned char *payload, unsigned int length) {
   }
 
   if (strstr((const char *)payload, "ipCuisine:\"")) {
-    strcpy(webIpCuisine,(const char *)&payload[strlen("ipCuisine:\"")]);
-    webIpCuisine[strlen(webIpCuisine)-1]=0;
+    COPY_STR(webIpCuisine,(const char *)&payload[strlen("ipCuisine:\"")]);
+    if (webIpCuisine[0])
+      webIpCuisine[strlen(webIpCuisine)-1]=0;
 #ifdef SERIAL_DEBUG
     Serial.printf("webIpCuisine:%s\n",webIpCuisine);
 #endif

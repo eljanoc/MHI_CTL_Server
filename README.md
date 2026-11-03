@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.29-trace)
+# MHI-AC-CtrlServer (V4.30-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -131,6 +131,9 @@ OTA update is possible through the VS Code task "OTA ESP8266 141" (see `.vscode/
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.30
+Fixed buffer overflows: the Wi-Fi network list (`/param_data`) overflowed a 200-byte buffer when several networks were in range, the web setting route (`/SetValue`) used a 30-byte topic buffer, and `/NewParam` crashed on a malformed request. All string copies are now bounded, and `/NewParam` answers 400 on invalid input.
 
 ### V4.29
 Cleanup: removed a debug trace that ran on every web request, and guarded the setpoint traces with `TELNET_DEBUG`.

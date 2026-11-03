@@ -79,24 +79,28 @@ void listNetworks() {
 #endif
 }
 
-char *getParametersString (char *tmp)
+char *getParametersString (char *tmp, size_t size)
 {
-  sprintf(tmp,"%s?%s?%s?%s?%s?%s?%s?%s?%s",
+  snprintf(tmp, size, "%s?%s?%s?%s?%s?%s?%s?%s?%s",
         staticIP,masqueIP,gatewayIP,dnsIP,mqtt_server,mqtt_port,wifiTimeout,Room,Thing);
   int numSsid = WiFi.scanNetworks();
   if (numSsid > 0) 
   // print the network number and name for each network found:
     for (int thisNet = 0; thisNet < numSsid; thisNet++) {
-      char ssid[30];
-      strcpy(ssid,WiFi.SSID(thisNet).c_str());
+      String netSsid = WiFi.SSID(thisNet);
 #ifdef SERIAL_DEBUG
-      Serial.printf("\(%d\) %s \tSignal:%d dBm\n",thisNet,ssid,WiFi.RSSI(thisNet));
+      Serial.printf("\(%d\) %s \tSignal:%d dBm\n",thisNet,netSsid.c_str(),WiFi.RSSI(thisNet));
 #endif
-      sprintf(&tmp[strlen(tmp)],"?%s",ssid);
-      if (!strcmp(ssid,savedWiFiSSID.c_str()))
-        sprintf(&tmp[strlen(tmp)],"?%s",savedWiFiPass.c_str());
+      size_t len = strlen(tmp);
+      // Réseau suivant ignoré s'il ne tient plus dans le tampon
+      if (len + netSsid.length() + savedWiFiPass.length() + 4 >= size)
+        break;
+      snprintf(&tmp[len], size - len, "?%s", netSsid.c_str());
+      len = strlen(tmp);
+      if (netSsid == savedWiFiSSID)
+        snprintf(&tmp[len], size - len, "?%s", savedWiFiPass.c_str());
       else
-        sprintf(&tmp[strlen(tmp)],"?");
+        snprintf(&tmp[len], size - len, "?");
     }
 #ifdef SERIAL_DEBUG
   Serial.printf("parametersString len:%d\n",strlen(tmp));
@@ -187,8 +191,20 @@ void newParams() {
     Serial.println("value:" + webServer.arg(i));
 #endif
   }
-  char param[200];
-  strcpy (param,webServer.arg(0).c_str());
+  char param[256];
+  if (webServer.arg(0).length() >= sizeof(param)) {
+    webServer.send(400, "text/plain", "400: Invalid Request");
+    return;
+  }
+  COPY_STR(param, webServer.arg(0).c_str());
+  int nbSep = 0;
+  for (const char *c = param; *c; c++)
+    if (*c == '?')
+      nbSep++;
+  if (nbSep < 9) {  // les 9 premiers champs doivent être présents
+    webServer.send(400, "text/plain", "400: Invalid Request");
+    return;
+  }
   webServer.send(200, "text/plain", "restarting...");
 #ifdef SERIAL_DEBUG
 Serial.printf("rest:%s\n",param);
@@ -198,15 +214,15 @@ Serial.printf("rest:%s\n",param);
 Serial.printf("rest1:%s\n",sd);
 #endif
   char *s;
-  s=strchr (sd,'?');*s=0;strcpy(staticIP,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;strcpy(masqueIP,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;strcpy(gatewayIP,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;strcpy(dnsIP,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;strcpy(mqtt_server,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;strcpy(mqtt_port,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;strcpy(wifiTimeout,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;strcpy(Room,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;strcpy(Thing,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;COPY_STR(staticIP,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;COPY_STR(masqueIP,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;COPY_STR(gatewayIP,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;COPY_STR(dnsIP,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;COPY_STR(mqtt_server,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;COPY_STR(mqtt_port,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;COPY_STR(wifiTimeout,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;COPY_STR(Room,sd);sd=s+1;
+  s=strchr (sd,'?');*s=0;COPY_STR(Thing,sd);sd=s+1;
   s=strchr (sd,'?');
   PreloadSSID[0]=0;
   PreloadPSW[0]=0;
@@ -216,8 +232,8 @@ Serial.printf("rest1:%s\n",sd);
     *s=0;
     if (*sd!='?')
     {
-      strcpy(PreloadSSID,sd);
-      strcpy(PreloadFlag,"o");
+      COPY_STR(PreloadSSID,sd);
+      COPY_STR(PreloadFlag,"o");
     }
     sd=s+1;
     s=strchr(sd,'?');
@@ -228,7 +244,7 @@ Serial.printf("rest1:%s\n",sd);
     {
       *s=0;
       if (*sd!='?')
-        strcpy(PreloadPSW,sd);
+        COPY_STR(PreloadPSW,sd);
 #ifdef SERIAL_DEBUG
       Serial.printf("Found PreloadPSW:%s\n",PreloadPSW);
 #endif
@@ -372,20 +388,20 @@ void setup() {
           }
           else 
           {
-            strcpy(staticIP, json["staticIP"]);
-            strcpy(masqueIP, json["masqueIP"]);
-            strcpy(gatewayIP, json["gatewayIP"]);
-            strcpy(dnsIP, json["dnsIP"]);
-            strcpy(mqtt_server, json["mqtt_server"]);
-            strcpy(mqtt_port, json["mqtt_port"]);
-            strcpy(mqtt_user, json["mqtt_user"]);
-            strcpy(mqtt_pass, json["mqtt_pass"]);
-            strcpy(wifiTimeout, json["wifiTimeout"]);
-            strcpy(Room, json["Room"]);
-            strcpy(Thing, json["Thing"]);
-            strcpy(PreloadSSID, json["PreloadSSID"]);
-            strcpy(PreloadPSW, json["PreloadPSW"]);
-            strcpy(PreloadFlag, json["PreloadFlag"]);
+            COPY_STR(staticIP, json["staticIP"] | "");
+            COPY_STR(masqueIP, json["masqueIP"] | "");
+            COPY_STR(gatewayIP, json["gatewayIP"] | "");
+            COPY_STR(dnsIP, json["dnsIP"] | "");
+            COPY_STR(mqtt_server, json["mqtt_server"] | "");
+            COPY_STR(mqtt_port, json["mqtt_port"] | "");
+            COPY_STR(mqtt_user, json["mqtt_user"] | "");
+            COPY_STR(mqtt_pass, json["mqtt_pass"] | "");
+            COPY_STR(wifiTimeout, json["wifiTimeout"] | "");
+            COPY_STR(Room, json["Room"] | "");
+            COPY_STR(Thing, json["Thing"] | "");
+            COPY_STR(PreloadSSID, json["PreloadSSID"] | "");
+            COPY_STR(PreloadPSW, json["PreloadPSW"] | "");
+            COPY_STR(PreloadFlag, json["PreloadFlag"] | "");
             formatFlag=false;
           }
         } 
@@ -502,7 +518,7 @@ void setup() {
   //Fetches ssid and pass and tries to connect
   //If it does not connect it starts an access point with the specified name
   //and goes into a blocking loop awaiting configuration
-  sprintf(configSSID, "Clim%s", Thing);
+  snprintf(configSSID, sizeof(configSSID), "Clim%s", Thing);
 #ifdef SERIAL_DEBUG
   Serial.printf("wifiManager.autoConnect(%s,%s)\n",configSSID, configPW);
 #endif
@@ -556,18 +572,18 @@ void setup() {
 #endif
 
   //Read updated parameters
-  strcpy(staticIP, custom_staticIP.getValue());
-  strcpy(masqueIP, custom_masqueIP.getValue());
-  strcpy(gatewayIP, custom_gatewayIP.getValue());
-  strcpy(dnsIP, custom_dnsIP.getValue());
+  COPY_STR(staticIP, custom_staticIP.getValue());
+  COPY_STR(masqueIP, custom_masqueIP.getValue());
+  COPY_STR(gatewayIP, custom_gatewayIP.getValue());
+  COPY_STR(dnsIP, custom_dnsIP.getValue());
 
-  strcpy(mqtt_server, custom_mqtt_server.getValue());
-  strcpy(mqtt_port, custom_mqtt_port.getValue());
-  strcpy(mqtt_user, custom_mqtt_user.getValue());
-  strcpy(mqtt_pass, custom_mqtt_pass.getValue());
-  strcpy(wifiTimeout, custom_wifiTimeout.getValue());
-  strcpy(Room, custom_topic_Room.getValue());
-  strcpy(Thing, custom_topic_Thing.getValue());
+  COPY_STR(mqtt_server, custom_mqtt_server.getValue());
+  COPY_STR(mqtt_port, custom_mqtt_port.getValue());
+  COPY_STR(mqtt_user, custom_mqtt_user.getValue());
+  COPY_STR(mqtt_pass, custom_mqtt_pass.getValue());
+  COPY_STR(wifiTimeout, custom_wifiTimeout.getValue());
+  COPY_STR(Room, custom_topic_Room.getValue());
+  COPY_STR(Thing, custom_topic_Thing.getValue());
 
 //  strcpy(PreloadSSID, custom_topic_PreloadSSID.getValue());
 //  strcpy(PreloadPSW, custom_topic_PreloadPSW.getValue());
@@ -575,24 +591,21 @@ void setup() {
 
   //Construct topic names
   //Topic prefix = "Room/Thing/"
-  strncpy(topic_prefix, Room, 20);
-  strcat(topic_prefix, "/");
-  strncat(topic_prefix, Thing, 20);
-  strcat(topic_prefix, "/");
+  snprintf(topic_prefix, sizeof(topic_prefix), "%.20s/%.20s/", Room, Thing);
 
   //Start all topics with topic prefix
   {
     char tmp[60];
-    sprintf(tmp, "%s%s", topic_prefix, MQTT_SET_PREFIX);
-    strcpy(MQTT_SET_PREFIX, tmp);
-    sprintf(tmp, "%s%s", topic_prefix, MQTT_OP_PREFIX);
-    strcpy(MQTT_OP_PREFIX, tmp);
-    sprintf(tmp, "%s%s", topic_prefix, MQTT_ERR_OP_PREFIX);
-    strcpy(MQTT_ERR_OP_PREFIX, tmp);
-    sprintf(tmp, "%s%s", topic_prefix, debug);
-    strcpy(debug, tmp);
-    sprintf(tmp, "%s%s", topic_prefix, service);
-    strcpy(service, tmp);
+    snprintf(tmp, sizeof(tmp), "%s%s", topic_prefix, MQTT_SET_PREFIX);
+    COPY_STR(MQTT_SET_PREFIX, tmp);
+    snprintf(tmp, sizeof(tmp), "%s%s", topic_prefix, MQTT_OP_PREFIX);
+    COPY_STR(MQTT_OP_PREFIX, tmp);
+    snprintf(tmp, sizeof(tmp), "%s%s", topic_prefix, MQTT_ERR_OP_PREFIX);
+    COPY_STR(MQTT_ERR_OP_PREFIX, tmp);
+    snprintf(tmp, sizeof(tmp), "%s%s", topic_prefix, debug);
+    COPY_STR(debug, tmp);
+    snprintf(tmp, sizeof(tmp), "%s%s", topic_prefix, service);
+    COPY_STR(service, tmp);
   }
 
   //Debug resulting topics to serial
