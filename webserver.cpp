@@ -190,14 +190,8 @@ static void webServerTaskSetup() {
   webServer.begin();
 }
 
-int lastTimeServerMillisCore0 = 0;
 void loopWebServer(void) {
-  unsigned long int curMillis = millis();
-  ;
-  if ((curMillis - lastTimeServerMillisCore0) > 100) {
-    lastTimeServerMillisCore0 = curMillis;
-    webServer.handleClient();
-  }
+  webServer.handleClient();
 }
 
 #ifdef MULTICORE
@@ -237,6 +231,9 @@ static void webServerTask(void *pvParameters) {
 #endif
 
 void loadWebServer() {
+#ifdef ESP8266
+  WiFiClient::setDefaultNoDelay(true);
+#endif
 #ifdef MULTICORE
   esp_task_wdt_init(WDT_TIMEOUT, true);  //enable panic so ESP32 restarts
   xTaskCreatePinnedToCore(               //Préparation Tâche Multi Coeur

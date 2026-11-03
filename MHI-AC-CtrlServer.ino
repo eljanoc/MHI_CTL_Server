@@ -6,7 +6,7 @@
 #include "MHI-AC-Ctrl.h"
 #include "support.h"
 
-#define WEB_VERSION "V4.25"
+#define WEB_VERSION "V4.26"
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
 
 POWER_STATUS power_status = unknown;

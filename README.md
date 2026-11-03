@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.25-trace)
+# MHI-AC-CtrlServer (V4.26-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -73,6 +73,7 @@ Default values are hard-coded in the firmware. Change them before any use outsid
 - **Web page**: login `John` and password `Pass` (`webserver.cpp`, `aswebserver.cpp`).
 - **Configuration WiFi access point and OTA update**: password `climatiseur` (`setup.cpp`, variable `configPW`). The same password is used for OTA.
 - MQTT credentials are entered in the configuration portal and are not part of the repository.
+- If the MQTT broker is unavailable, the web interface is serviced before MQTT reconnect attempts, which are spaced 5 seconds apart. On ESP8266, the TCP connection timeout is limited to 250 ms; the MQTT response timeout is 1 second.
 
 Do not expose the ESP directly to the internet.
 
@@ -128,6 +129,12 @@ OTA update is possible through the VS Code task "OTA ESP8266 141" (see `.vscode/
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.26
+Fixed: the web page was extremely slow while the MQTT broker was unreachable. The main loop retried the MQTT connection on every pass (blocking on the TCP connect and a 1 s `delay`) and the web server was only polled every 100 ms after it.
+- The web server is now polled on every loop pass, before the MQTT reconnect.
+- MQTT reconnect attempts are spaced 5 seconds apart, with no blocking `delay` on failure.
+- ESP8266: TCP connect timeout limited to 250 ms; MQTT socket timeout 1 s; Nagle disabled for the web server.
 
 ## Acknowledgments
 Many thanks to **absalom-muc** for [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl): his work decoding the SPI protocol of Mitsubishi Heavy air conditioners, and releasing it as open source, is the origin of this project. Thanks also to **tzapu** for WiFiManager and to the authors of the libraries used.

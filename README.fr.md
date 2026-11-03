@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.25-trace)
+# MHI-AC-CtrlServer (V4.26-trace)
 
 [English](README.md) | **Français**
 
@@ -73,6 +73,7 @@ Des valeurs par défaut sont codées en dur dans le firmware. Change-les avant t
 - **Page web** : identifiant `John` et mot de passe `Pass` (`webserver.cpp`, `aswebserver.cpp`).
 - **Point d'accès WiFi de configuration et mise à jour OTA** : mot de passe `climatiseur` (`setup.cpp`, variable `configPW`). Le même mot de passe sert à l'OTA.
 - Les identifiants MQTT sont saisis dans le portail de configuration et ne figurent pas dans le dépôt.
+- Si le broker MQTT est indisponible, l'interface web est servie avant les tentatives de reconnexion, espacées de 5 secondes. Sur ESP8266, le délai de connexion TCP est limité à 250 ms ; le délai d'attente de réponse MQTT est d'une seconde.
 
 N'expose pas l'ESP directement sur internet.
 
@@ -128,6 +129,12 @@ La mise à jour OTA est possible via la tâche VS Code « OTA ESP8266 141 » (vo
 
 ## Versions
 Les versions sont gérées avec des tags Git, par exemple `v4.25-trace`.
+
+### V4.26
+Corrigé : la page web était extrêmement lente quand le broker MQTT était injoignable. La boucle principale retentait la connexion MQTT à chaque passage (blocage sur la connexion TCP et un `delay` d'1 s) et le serveur web n'était interrogé que toutes les 100 ms après.
+- Le serveur web est maintenant interrogé à chaque passage de boucle, avant la reconnexion MQTT.
+- Les tentatives de reconnexion MQTT sont espacées de 5 secondes, sans `delay` bloquant en cas d'échec.
+- ESP8266 : délai de connexion TCP limité à 250 ms ; délai MQTT 1 s ; Nagle désactivé pour le serveur web.
 
 ## Remerciements
 Un grand merci à **absalom-muc** pour [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) : son travail de décodage du protocole SPI des climatisations Mitsubishi Heavy, et sa publication en open source, sont à l'origine de ce projet. Merci aussi à **tzapu** pour WiFiManager et aux auteurs des bibliothèques utilisées.

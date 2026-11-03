@@ -32,6 +32,7 @@ extern char MQTT_ERR_OP_PREFIX[60];
 extern char debug[60];    //Send only
 extern char service[60];  //Receive only
 
+extern WiFiClient espClient;
 extern PubSubClient MQTTclient;
 #ifdef TELNET_DEBUG
 extern RemoteDebug Debug;
@@ -227,6 +228,10 @@ void connect() {
     //MQTT connection: Attempt to connect to MQTT broker 3 times: SUCCESS -> continue | FAILED restart ESP
     //On restart it will first try to connect to the previously set AP. If that fails the config portal will be started.
     //If the config portal is not used within wifiTimeout (set in portal), the ESP will retry connecting to the previously set AP again.
+#ifdef ESP8266
+    espClient.setTimeout(250);
+#endif
+    MQTTclient.setSocketTimeout(1);
     if (MQTTclient.connect(configSSID, mqtt_user, mqtt_pass)) 
     {
 #ifdef SERIAL_DEBUG
@@ -323,7 +328,6 @@ void connect() {
       Debug.println("Try again in 5 seconds...");
 #endif
       strcpy(MQTTconnectedFlag,"no");
-      delay(1000);
     }
   }
 }
@@ -408,14 +412,20 @@ void loop() {
     nbLoop=maxLoop=moyLoop=nbLoop=0;
   }
 
-  if (!MQTTclient.connected())  //Check MQTT connection
-  {
+  loopWebServer();
+
+  static unsigned long lastMQTTReconnectMillis = 0;
+  static bool mqttReconnectAttempted = false;
+  if (!MQTTclient.connected() &&
+      (!mqttReconnectAttempted || curMillis - lastMQTTReconnectMillis >= 5000)) {
 #ifdef SERIAL_DEBUG
     Serial.printf("MQTT deconnected, call connect()\n");
 #endif
 #ifdef TELNET_DEBUG
     Debug.printf("MQTT deconnected, call connect()\n");
 #endif
+    mqttReconnectAttempted = true;
+    lastMQTTReconnectMillis = curMillis;
     connect();  //Connect first time. Reconnect when connection lost.
   }
   if ((curMillis - lastTimeMQTTMillis) > 100) {
@@ -424,7 +434,6 @@ void loop() {
   }
   loopMHI();
 
-  loopWebServer();
   stateTest();
   nbLoop++;
 }
