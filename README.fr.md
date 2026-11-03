@@ -128,6 +128,11 @@ La mise à jour OTA est possible via la tâche VS Code « OTA ESP8266 141 » (vo
 | `webserver.cpp`, `aswebserver.cpp` | Serveur web (synchrone / asynchrone) |
 | `mainHTML.h`, `paramHTML.h` | Pages web embarquées |
 | `support.cpp/.h`, `include.h` | Fonctions utilitaires et options de compilation |
+| `params_logic.h` | Logique pure des paramètres (découpage de `/NewParam`, construction de `/param_data`), testable sur PC |
+| `test/test_params.cpp` | Tests automatiques de cette logique |
+
+### Tests
+Les tests tournent sur PC, sans carte : `g++ -I. test/test_params.cpp -o test_params && ./test_params`. La CI les exécute avant la compilation des firmwares.
 
 ## Versions
 Les versions sont gérées avec des tags Git, par exemple `v4.25-trace`.

@@ -1,4 +1,5 @@
 #include "include.h"
+#include "params_logic.h"
 #include <WiFiManager.h>   //https://github.com/tzapu/WiFiManager
 
 //Variables below are initial values that can be changed at any time from the WiFiManager configuration portal and will be stored in flash memory. If there are different values in config.json, they are overwritten.
@@ -82,8 +83,8 @@ void listNetworks() {
 
 char *getParametersString (char *tmp, size_t size)
 {
-  snprintf(tmp, size, "%s?%s?%s?%s?%s?%s?%s?%s?%s?%s",
-        staticIP,masqueIP,gatewayIP,dnsIP,mqtt_server,mqtt_port,wifiTimeout,Room,Thing,mqtt_enabled);
+  mhi::buildParamsBase(tmp, size, staticIP, masqueIP, gatewayIP, dnsIP, mqtt_server, mqtt_port,
+                       wifiTimeout, Room, Thing, mqtt_enabled);
   int numSsid = WiFi.scanNetworks();
   if (numSsid > 0) 
   // print the network number and name for each network found:
@@ -92,16 +93,10 @@ char *getParametersString (char *tmp, size_t size)
 #ifdef SERIAL_DEBUG
       Serial.printf("\(%d\) %s \tSignal:%d dBm\n",thisNet,netSsid.c_str(),WiFi.RSSI(thisNet));
 #endif
-      size_t len = strlen(tmp);
       // Réseau suivant ignoré s'il ne tient plus dans le tampon
-      if (len + netSsid.length() + savedWiFiPass.length() + 4 >= size)
+      if (!mhi::appendNetwork(tmp, size, netSsid.c_str(), savedWiFiSSID.c_str(),
+                              savedWiFiPass.c_str(), WiFi.RSSI(thisNet)))
         break;
-      snprintf(&tmp[len], size - len, "?%s", netSsid.c_str());
-      len = strlen(tmp);
-      if (netSsid == savedWiFiSSID)
-        snprintf(&tmp[len], size - len, "?%s", savedWiFiPass.c_str());
-      else
-        snprintf(&tmp[len], size - len, "?");
     }
 #ifdef SERIAL_DEBUG
   Serial.printf("parametersString len:%d\n",strlen(tmp));
@@ -183,66 +178,25 @@ void newParams() {
     Serial.println("value:" + webServer.arg(i));
 #endif
   }
-  char param[256];
-  if (webServer.arg(0).length() >= sizeof(param)) {
-    webServer.send(400, "text/plain", "400: Invalid Request");
-    return;
-  }
-  COPY_STR(param, webServer.arg(0).c_str());
-  int nbSep = 0;
-  for (const char *c = param; *c; c++)
-    if (*c == '?')
-      nbSep++;
-  if (nbSep < 10) {  // les 10 premiers champs doivent être présents
+  mhi::NewParams np;
+  if (!mhi::parseNewParams(webServer.arg(0).c_str(), np)) {
     webServer.send(400, "text/plain", "400: Invalid Request");
     return;
   }
   webServer.send(200, "text/plain", "restarting...");
-#ifdef SERIAL_DEBUG
-Serial.printf("rest:%s\n",param);
-#endif
-  char *sd=&param[0];
-#ifdef SERIAL_DEBUG
-Serial.printf("rest1:%s\n",sd);
-#endif
-  char *s;
-  s=strchr (sd,'?');*s=0;COPY_STR(staticIP,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;COPY_STR(masqueIP,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;COPY_STR(gatewayIP,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;COPY_STR(dnsIP,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;COPY_STR(mqtt_server,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;COPY_STR(mqtt_port,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;COPY_STR(wifiTimeout,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;COPY_STR(Room,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;COPY_STR(Thing,sd);sd=s+1;
-  s=strchr (sd,'?');*s=0;strlcpy(mqtt_enabled, (*sd=='0') ? "0" : "1", sizeof(mqtt_enabled));sd=s+1;
-  s=strchr (sd,'?');
-  PreloadSSID[0]=0;
-  PreloadPSW[0]=0;
-  PreloadFlag[0]=0;
-  if (s)
-  {
-    *s=0;
-    if (*sd!='?')
-    {
-      COPY_STR(PreloadSSID,sd);
-      COPY_STR(PreloadFlag,"o");
-    }
-    sd=s+1;
-    s=strchr(sd,'?');
-#ifdef SERIAL_DEBUG
-    Serial.printf("Found PreloadSSID:%s\n",PreloadSSID);
-#endif
-    if (s)
-    {
-      *s=0;
-      if (*sd!='?')
-        COPY_STR(PreloadPSW,sd);
-#ifdef SERIAL_DEBUG
-      Serial.printf("Found PreloadPSW:%s\n",PreloadPSW);
-#endif
-    }
-  }
+  COPY_STR(staticIP, np.staticIP);
+  COPY_STR(masqueIP, np.masqueIP);
+  COPY_STR(gatewayIP, np.gatewayIP);
+  COPY_STR(dnsIP, np.dnsIP);
+  COPY_STR(mqtt_server, np.mqtt_server);
+  COPY_STR(mqtt_port, np.mqtt_port);
+  COPY_STR(wifiTimeout, np.wifiTimeout);
+  COPY_STR(Room, np.Room);
+  COPY_STR(Thing, np.Thing);
+  COPY_STR(mqtt_enabled, np.mqtt_enabled);
+  COPY_STR(PreloadSSID, np.PreloadSSID);
+  COPY_STR(PreloadPSW, np.PreloadPSW);
+  COPY_STR(PreloadFlag, np.PreloadFlag);
 
 #ifdef SERIAL_DEBUG
 Serial.printf("staticIP:%s\n",staticIP);
@@ -631,6 +585,5 @@ void setup() {
 #endif
   setupMHI();
 }
-
 
 

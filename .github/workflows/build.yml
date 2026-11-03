@@ -8,7 +8,17 @@ on:
   workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests (pure logic, no board)
+        run: |
+          g++ -Wall -Wextra -Werror -fsanitize=address,undefined -I. test/test_params.cpp -o test_params
+          ./test_params
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

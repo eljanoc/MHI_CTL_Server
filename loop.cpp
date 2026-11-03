@@ -8,6 +8,7 @@ R.J. Dekker, June 2018
 ##############################################################################################################################################################################################
 */
 #include "include.h"
+#include "params_logic.h"
 
 //Access point that WiFiManager starts for configuration. Name and password should be set below before flashing.
 //This is hardcoded and cannot be changed later.
@@ -421,7 +422,7 @@ void loop() {
   static unsigned long lastMQTTReconnectMillis = 0;
   static bool mqttReconnectAttempted = false;
   // MQTT désactivé (case décochée), serveur vide ou 0.0.0.0 : mode autonome, aucune tentative ni redémarrage
-  bool mqttDisabled = (mqtt_enabled[0] == '0' || mqtt_server[0] == '\0' || strcmp(mqtt_server, "0.0.0.0") == 0);
+  bool mqttDisabled = mhi::mqttDisabled(mqtt_enabled, mqtt_server);
   if (mqttDisabled && strcmp(MQTTconnectedFlag, "off") != 0)
     strcpy(MQTTconnectedFlag, "off");
   if (!mqttDisabled && !MQTTclient.connected() &&
