@@ -416,7 +416,9 @@ void loop() {
 
   static unsigned long lastMQTTReconnectMillis = 0;
   static bool mqttReconnectAttempted = false;
-  if (!MQTTclient.connected() &&
+  // Serveur MQTT vide ou 0.0.0.0 : MQTT désactivé, mode autonome (aucune tentative, pas de redémarrage)
+  bool mqttDisabled = (mqtt_server[0] == '\0' || strcmp(mqtt_server, "0.0.0.0") == 0);
+  if (!mqttDisabled && !MQTTclient.connected() &&
       (!mqttReconnectAttempted || curMillis - lastMQTTReconnectMillis >= 5000)) {
 #ifdef SERIAL_DEBUG
     Serial.printf("MQTT deconnected, call connect()\n");

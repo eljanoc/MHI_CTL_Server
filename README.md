@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.26-trace)
+# MHI-AC-CtrlServer (V4.27-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -131,6 +131,9 @@ OTA update is possible through the VS Code task "OTA ESP8266 141" (see `.vscode/
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.27
+New: standalone mode. An empty MQTT server or `0.0.0.0` disables MQTT: no connection attempt, and no automatic restart after 30 failed attempts (with an unreachable broker the ESP restarted about every 2.5 minutes).
 
 ### V4.26
 Fixed: the web page was extremely slow while the MQTT broker was unreachable. The main loop retried the MQTT connection on every pass (blocking on the TCP connect and a 1 s `delay`) and the web server was only polled every 100 ms after it.
