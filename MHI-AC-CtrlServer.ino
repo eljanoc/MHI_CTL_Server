@@ -19,65 +19,6 @@ char* myPSTR(char* s1, const char* s2) {
   sprintf(myPSTR_s, "%s%s", s1, s2);
   return myPSTR_s;
 }
-#if 0
-bool dejaImprime = false;
-void printTopic() {
-  if (dejaImprime)
-    return;
-  dejaImprime = true;
-#ifdef SERIAL_DEBUG
-  Serial.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_POWER));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_POWER_ON));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_POWER_OFF));
-  Serial.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_MODE));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_POWER_OFF));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_MODE_AUTO));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_MODE_DRY));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_MODE_COOL));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_MODE_FAN));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_MODE_HEAT));
-  Serial.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_TSETPOINT));
-  Serial.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_FAN));
-  Serial.printf("payload:%s\n", PAYLOAD_FAN_AUTO);
-  Serial.printf("payload:%s\n", "1");
-  Serial.printf("payload:%s\n", "2");
-  Serial.printf("payload:%s\n", "3");
-  Serial.printf("payload:%s\n", "4");
-  Serial.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_VANES));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_VANES_SWING));
-  Serial.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_TROOM));
-  Serial.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_REQUEST_ERROPDATA));
-  Serial.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_REQUEST_RESET));
-  Serial.printf("payload:%s\n", PSTR(PAYLOAD_REQUEST_RESET));
-#endif
-#ifdef TELNET_DEBUG
-  Debug.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_POWER));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_POWER_ON));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_POWER_OFF));
-  Debug.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_MODE));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_POWER_OFF));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_MODE_AUTO));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_MODE_DRY));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_MODE_COOL));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_MODE_FAN));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_MODE_HEAT));
-  Debug.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_TSETPOINT));
-  Debug.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_FAN));
-  Debug.printf("payload:%s\n", PAYLOAD_FAN_AUTO);
-  Debug.printf("payload:%s\n", "1");
-  Debug.printf("payload:%s\n", "2");
-  Debug.printf("payload:%s\n", "3");
-  Debug.printf("payload:%s\n", "4");
-  Debug.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_VANES));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_VANES_SWING));
-  Debug.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_TROOM));
-  Debug.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_REQUEST_ERROPDATA));
-  Debug.printf("topic:%s\n", myPSTR(MQTT_SET_PREFIX, TOPIC_REQUEST_RESET));
-  Debug.printf("payload:%s\n", PSTR(PAYLOAD_REQUEST_RESET));
-#endif
-}
-#endif
-
 void TopicService(byte* payload, unsigned int length);
 
 extern char service[40];
@@ -89,7 +30,6 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
 #endif
 #ifdef TELNET_DEBUG
   Debug.printf_P(PSTR("MQTT_subscribe_callback, topic=%s payload=%s payload_length=%i\n"), topic, (char*)payload, length);
-//  printTopic();
 #endif
   if (!strcmp((const char*)topic, (const char*)service)) {
 #ifdef SERIAL_DEBUG
@@ -286,7 +226,6 @@ char* getWebValuesString(char *S, size_t size) {
           tReboot.tm_min,  /* Minutes. [0-59]      */
           webPuissance, webIpSalon, webIpChNO, webIpCuisine,MQTTconnectedFlag);
 #ifdef SERIAL_DEBUG
-//  Serial.printf ("webValueString len : %d\n",strlen(S));
 #endif
   return S;
 }
@@ -307,9 +246,7 @@ public:
 #endif
     static byte status_troom_old = 0xff;
 #ifdef SERIAL_DEBUG
-    //Serial.printf_P(PSTR("status=%i value=%i\n"), status, value);
 #endif
-    //Debug.printf_P(PSTR("status=%i value=%i\n"), status, value);
     switch (status) {
       case status_power:
         // After powerdown AC (230V), fan status is only showing 1, 2 or 3. 4 and Auto is not shown when changing with RC.
@@ -406,31 +343,6 @@ public:
           output_P(status, TOPIC_FAN, webFanTab[webFan]);
         else
           output_P(status, TOPIC_FAN, "???");
-#if 0
-        if (value)
-        switch (value) {
-          case 0:
-            output_P(status, TOPIC_FAN, "1");
-            break;
-          case 1:
-            output_P(status, TOPIC_FAN, "2");
-            break;
-          case 2:
-            output_P(status, TOPIC_FAN, "3");
-            break;
-          case 6:
-            output_P(status, TOPIC_FAN, "4");
-            break;
-          case 7:
-            output_P(status, TOPIC_FAN, PAYLOAD_FAN_AUTO);
-            break;
-          default:  // invalid values
-            itoa(value, strtmp, 10);
-            strcat(strtmp, "?");
-            output_P(status, TOPIC_FAN, strtmp);
-            break;
-        }
-#endif
         break;
       case status_vanes:
         webVanes = value;
@@ -443,20 +355,6 @@ public:
 #endif
           output_P(status, PSTR(TOPIC_VANES), webVanesTab[webVanes]);
         }
-
-#if 0       
-        switch (value) {
-          case vanes_unknown:
-            output_P(status, PSTR(TOPIC_VANES), PSTR(PAYLOAD_VANES_UNKNOWN));
-            break;
-          case vanes_swing:
-            output_P(status, PSTR(TOPIC_VANES), PSTR(PAYLOAD_VANES_SWING));
-            break;
-          default:
-            itoa(value, strtmp, 10);
-            output_P(status, PSTR(TOPIC_VANES), strtmp);
-        }
-#endif
         break;
       case status_troom:
         {
@@ -494,7 +392,6 @@ public:
         Debug.printf(" webTsetpoint=%d\n", webTsetpoint);
 #endif
         sprintf(strtmp, "%d", (value & 0x7f) / 2);
-        //dtostrf((value & 0x7f) / 2.0, 0, 1, strtmp);
         output_P(status, PSTR(TOPIC_TSETPOINT), strtmp);
         break;
       case status_errorcode:
@@ -740,7 +637,6 @@ void loopMHI() {
   int ret = mhi_ac_ctrl_core.loop(80);
   publishTraceFrames();
   if (ret < 0) {
-    //    tabError[mhi_ac_ctrl_core_error].err=ret;
     mhi_ac_ctrl_core_error++;
   } else
     timeGood += millis() - myTmpTime;

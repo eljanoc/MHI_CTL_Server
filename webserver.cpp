@@ -69,7 +69,6 @@ bool verifAuthor() {  // If a POST request is made to URI /login
     return false;
   }
   if (!strcmp(webServer.arg("username").c_str(),login) && !strcmp(webServer.arg("password").c_str(),psw)) {  // If both the username and the password are correct
-    //    webServer.send(200, "text/html", "<h1>Welcome, " + webServer.arg("username") + "!</h1><p>Login successful</p>");
     Debug.println("Return true");
     return true;
   } else {  // Username and password don't match
@@ -214,7 +213,6 @@ static void webServerTask(void *pvParameters) {
     loopWebServer();
     if (nbLoop && (curMillis - lastPrintMillis) > 4000) {
       lastPrintMillis = curMillis;
-//      moyLoop/=nbLoop;
 #ifdef SERIAL_DEBUG
       Serial.printf("Core:%d, nbLoop:%d\n", core, nbLoop);
 #endif
@@ -222,8 +220,6 @@ static void webServerTask(void *pvParameters) {
       Debug.printf("Core:%d, nbLoop:%d\n", core, nbLoop);
 #endif
       nbLoop = 0;
-      //    minLoop=100000;
-      //    nbLoop=maxLoop=moyLoop=nbLoop=0;
     } else
       nbLoop++;
   }

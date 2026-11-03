@@ -114,12 +114,7 @@ void saveJson (bool f){
   Serial.printf("saveJson\n");
   Serial.println("saving config");
 #endif
-#ifdef JSON_5
-  DynamicJsonBuffer jsonBuffer;
-  JsonObject& json = jsonBuffer.createObject();
-#else
   DynamicJsonDocument json(512);
-#endif
 
 
   json["staticIP"]= staticIP;
@@ -155,13 +150,8 @@ void saveJson (bool f){
     Debug.println("succes writing config file");
 #endif
 
-#ifdef JSON_5
-  json.printTo(Serial);
-  json.printTo(configFile);
-#else
   serializeJson(json,Serial);
   serializeJson(json,configFile);
-#endif
   configFile.close();
     //end save
 }
@@ -339,40 +329,22 @@ void setup() {
 #endif
 
         bool error;
-#ifdef JSON_5
-        //Allocate a buffer to store contents of the file.
-        std::unique_ptr<char[]> buf(new char[size]);
-        configFile.readBytes(buf.get(), size);
-        DynamicJsonBuffer jsonBuffer;
-        JsonObject &json = jsonBuffer.parseObject(buf.get());
-        if (json.success())
-          error=false;
-        else
-          error=false;
-#else
         DynamicJsonDocument json(size*2);
         auto err = deserializeJson(json, configFile);
         if (err)
           error=true;
         else
           error=false;
-#endif
 
 #ifdef SERIAL_DEBUG
    Serial.printf("Opened config file 1:\n");
-#ifdef JSON_6
    size_t len = measureJson(json);
    Serial.printf ("............................Json length : %d\n",len);
-#endif
 #endif
         if (!error) {
 #ifdef SERIAL_DEBUG
           Serial.printf("Opened config file 2:\n");
-#ifdef JSON_5
-          json.printTo(Serial);
-#else
         serializeJson(json, Serial);
-#endif
 #endif
 
 #ifdef SERIAL_DEBUG
@@ -457,10 +429,6 @@ void setup() {
   WiFiManagerParameter custom_topic_Room("Room", "Room name", Room, 20);
   WiFiManagerParameter custom_topic_Thing("Thing", "Thing name", Thing, 20);
 
-//  WiFiManagerParameter custom_topic_PreloadSSID("PreloadSSID", "PreloadSSID name", PreloadSSID, 20);
-//  WiFiManagerParameter custom_topic_PreloadPSW("PreloadPSW", "PreloadPSW name", PreloadPSW, 20);
-//  WiFiManagerParameter custom_topic_PreloadFlag("PreloadFlag", "PreloadFlag name", PreloadFlag, 20);
-
   //WiFiManager
   //Local intialization. Once its business is done, there is no need to keep it around
   WiFiManager wifiManager;
@@ -508,9 +476,6 @@ void setup() {
   wifiManager.addParameter(&custom_topic_Room);
   wifiManager.addParameter(&custom_topic_Thing);
 
-//  wifiManager.addParameter(&custom_topic_PreloadSSID);
-//  wifiManager.addParameter(&custom_topic_PreloadPSW);
-//  wifiManager.addParameter(&custom_topic_PreloadFlag);
 
   //Set minimum quality of signal so it ignores AP's under that quality
   //Defaults to 8%
@@ -527,7 +492,7 @@ void setup() {
 #ifdef SERIAL_DEBUG
   Serial.printf("wifiManager.autoConnect(%s,%s)\n",configSSID, configPW);
 #endif
- // if (!wifiManager.startConfigPortal(configSSID, configPW)) {
+
 
 #if 1
   if (PreloadSSID[0] && PreloadFlag[0])
@@ -572,9 +537,6 @@ void setup() {
 #ifdef SERIAL_DEBUG
   Serial.printf("Connected...yeey savedWiFiSSID:%s, configSSID:%s\n",savedWiFiSSID.c_str(), configSSID);
 #endif
-#ifdef TELNET_DEBUG
-//  Debug.printf("Connected...yeey savedWiFiSSID:%s, configSSID:%s\n",savedWiFiSSID, configSSID);
-#endif
 
   //Read updated parameters
   COPY_STR(staticIP, custom_staticIP.getValue());
@@ -590,9 +552,6 @@ void setup() {
   COPY_STR(Room, custom_topic_Room.getValue());
   COPY_STR(Thing, custom_topic_Thing.getValue());
 
-//  strcpy(PreloadSSID, custom_topic_PreloadSSID.getValue());
-//  strcpy(PreloadPSW, custom_topic_PreloadPSW.getValue());
-//  strcpy(PreloadFlag, custom_topic_PreloadFlag.getValue());
 
   //Construct topic names
   //Topic prefix = "Room/Thing/"
@@ -672,22 +631,6 @@ void setup() {
 #endif
   setupMHI();
 }
-#if 0
-void startConfigPortal(){
-  WiFiManager wm;
-  Serial.println("launch AP!");
-  wm.setConfigPortalTimeout(3*60);
-  if (!wm.startConfigPortal("RoomName"))
-  {
-    Serial.println("failed to launch AP!");
-    while (1)
-      delay(3000);
-    ESP.restart();
-    delay(2000);
-  }
-  Serial.println("Connected after startConfigPortal");
-}
-#endif
 
 
 

@@ -58,7 +58,6 @@ static byte modeValues[5] = { 0b00010001, 0b00001001, 0b00000001, 0b00000101, 0b
 void startConfigPortal();
 
 void WiFiDisconnectAndRestart() {  
-//  WiFi.persistent(false);
 #ifdef ESP32
   WiFi.disconnect(true, true);  //Start WiFiManager  for reconfiguration
 #else
@@ -320,7 +319,6 @@ void connect() {
         Debug.println("MQTT broker connection timeout...restarting!");
 #endif
         ESP.restart();
-        //WiFiDisconnectAndRestart();
       }
 #ifdef SERIAL_DEBUG
       Serial.println("Try again in 5 seconds...");
@@ -413,7 +411,6 @@ void loop() {
     Debug.printf("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP,  Deconnexions:%d\n", 
                 core, configSSID, Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), nbDeconnect);
 #endif
-  //  listNetworks();
     nbLoop=0;
     minLoop=100000;
     nbLoop=maxLoop=moyLoop=nbLoop=0;
