@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.27-trace)
+# MHI-AC-CtrlServer (V4.28-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -131,6 +131,9 @@ OTA update is possible through the VS Code task "OTA ESP8266 141" (see `.vscode/
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.28
+Fixed: the "Last reboot" field showed 00/01/1900 0h00 without MQTT, because the date was only recorded on the first MQTT connection. It is now set as soon as the NTP time is known.
 
 ### V4.27
 New: standalone mode. An empty MQTT server or `0.0.0.0` disables MQTT: no connection attempt, and no automatic restart after 30 failed attempts (with an unreachable broker the ESP restarted about every 2.5 minutes).

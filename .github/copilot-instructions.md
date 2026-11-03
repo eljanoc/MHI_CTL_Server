@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.27-trace)
+# MHI-AC-CtrlServer (V4.28-trace)
 
 Firmware ESP8266 / ESP32 pour piloter une climatisation Mitsubishi Heavy (SPI) via MQTT et interface web.
 Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branches/tags), pas avec des copies de dossier.
@@ -16,7 +16,7 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 - Outil : `arduino-cli` d'Arduino IDE (`C:\Program Files\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe`).
 - ESP8266 : carte `esp8266:esp8266:d1_mini`. OTA via la tâche VS Code « OTA ESP8266 141 » (`.vscode\tasks.json`, IP 192.168.0.141, build dans `%TEMP%\MHI-ota-8266\build`).
 - ESP32 : carte `esp32:esp32:esp32doit-devkit-v1` (la carte générique `esp32` échoue : `LED_BUILTIN` absent). Build dans `%TEMP%\MHI-trace-32\build`. Téléversement USB sur COM3 : utiliser `UploadSpeed=115200` (921600 échoue).
-- Binaires produits dans `bin\` (ignorés par Git) : `MHI8266-V4.27.bin`, `MHI32-V4.27.bin`, `MHI32-V4.27-merged.bin`.
+- Binaires produits dans `bin\` (ignorés par Git) : `MHI8266-V4.28.bin`, `MHI32-V4.28.bin`, `MHI32-V4.28-merged.bin`.
 
 ## Historique / décisions
 - WiFiManager 2.0.17 modifiée pour ESP8266 uniquement : correction dans `getMenuOut()` (cast `__FlashStringHelper`), évite un bouclage au démarrage environ une minute après le boot. Voir README. Garder la correction dans `libs/WiFiManager` et `Documents\Arduino\libraries\WiFiManager`; elle répond au problème observé sur ESP8266, pas à un problème ESP32.
@@ -28,3 +28,4 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 
 - NTPClient 3.2.1 modifiee : \yte\ -> \uint8_t\ dans NTPClient.h (ambiguite std::byte avec using namespace std). Copie dans libs/NTPClient, utilisee par la CI.
 - V4.27 : serveur MQTT vide ou `0.0.0.0` = MQTT désactivé (mode autonome) : aucune tentative de connexion, donc plus de redémarrage automatique après 30 échecs (avec un broker injoignable, l'ESP redémarrait toutes les ~2,5 min).
+- V4.28 : le champ « Last reboot » est fixé dès que l'heure NTP est connue (avant, il n'était renseigné qu'à la première connexion MQTT : 00/01/1900 en mode autonome).

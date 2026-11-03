@@ -133,7 +133,7 @@ void sendConnexion2mqtt(bool start) {
   char msg[300];
   time_t rawtime = timeClient.getEpochTime();
   struct tm *tcur = localtime(&rawtime);
-  if (myConnexionCount == 0)
+  if (tReboot.tm_year == 0)
     tReboot = *tcur;
 
   String ip = WiFi.localIP().toString();
@@ -388,6 +388,12 @@ void loop() {
 #ifdef TELNET_DEBUG
     Debug.printf("Update NTP:%d, durée NTPClient: %dms\n", b, tmp);
 #endif
+  }
+
+  // Date de reboot fixée dès que l'heure NTP est connue, indépendamment de MQTT
+  if (tReboot.tm_year == 0 && timeClient.isTimeSet()) {
+    time_t rawtime = timeClient.getEpochTime();
+    tReboot = *localtime(&rawtime);
   }
 
   if (nbLoop&&(curMillis - lastPrintMillis) > 10000) {
