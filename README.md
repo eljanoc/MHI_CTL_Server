@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.31-trace)
+# MHI-AC-CtrlServer (V4.32-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -136,6 +136,9 @@ Tests run on a PC, no board needed: `g++ -I. test/test_params.cpp -o test_params
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.32
+The configuration page now lists the Wi-Fi networks in range in a drop-down next to the SSID field, each with its signal level in dBm. Picking one fills the SSID and, for the saved network, its password; typing an SSID by hand still works. The Wi-Fi list in `/param_data` is now made of triplets (SSID, password, RSSI) starting at index 10, and the response buffer grew to 4096 bytes. Automated PC tests of the parameter logic were added (`test/test_params.cpp`).
 
 ### V4.31
 New "MQTT active" checkbox on the configuration page (`config.json` key `mqtt_enabled`, default on). Unchecked, the module runs standalone without any MQTT attempt (shown as `off`). The configuration page hides the MQTT IP and port fields when the box is unchecked, and shows the firmware version under the title. An empty server or `0.0.0.0` still disables MQTT. `/param_data` and `/NewParam` gain a 10th field (after `Thing`); the Wi-Fi list now starts at index 10.
