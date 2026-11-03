@@ -29,3 +29,18 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 - NTPClient 3.2.1 modifiee : \yte\ -> \uint8_t\ dans NTPClient.h (ambiguite std::byte avec using namespace std). Copie dans libs/NTPClient, utilisee par la CI.
 - V4.27 : serveur MQTT vide ou `0.0.0.0` = MQTT désactivé (mode autonome) : aucune tentative de connexion, donc plus de redémarrage automatique après 30 échecs (avec un broker injoignable, l'ESP redémarrait toutes les ~2,5 min).
 - V4.28 : le champ « Last reboot » est fixé dès que l'heure NTP est connue (avant, il n'était renseigné qu'à la première connexion MQTT : 00/01/1900 en mode autonome).
+
+## Pièges pratiques (à relire avant d'agir)
+- OTA ESP8266 qui marche : `arduino-cli upload` échoue ("No Answer"). Appeler `espota.py` directement avec l'IP du PC (`-I`, ex. 192.168.0.88, à vérifier avec `Get-NetIPAddress`) :
+  `python3.exe espota.py -i 192.168.0.141 -I <IP PC> -a climatiseur -f <build>\MHI-AC-CtrlServer.ino.bin`
+  - python3 : `%LOCALAPPDATA%\Arduino15\packages\esp8266\tools\python3\3.7.2-post1\python3.exe`
+  - espota.py : `%LOCALAPPDATA%\Arduino15\packages\esp8266\hardware\esp8266\2.7.4\tools\espota.py`
+  - 192.168.0.141 est un ESP8266 : ne jamais lui flasher le `.bin` ESP32.
+- Compilation locale : ajouter `--library .\libs\WiFiManager --library .\libs\RemoteDebug --library .\libs\NTPClient` et un `--build-path` explicite (sinon cache partagé entre cartes qui échoue).
+- Ne JAMAIS réécrire `MHI-AC-CtrlServer.ino` avec `Set-Content`/`Get-Content` PowerShell : l'encodage est corrompu (BOM ajouté, « ° » abîmé). Utiliser l'outil d'édition.
+- Version : changer `WEB_VERSION` (ligne 9 du `.ino`), les titres des deux README et ce fichier, et ajouter une section dans « Versions » des README.
+- Git : pas d'identité globale, utiliser `-c user.name="jeanl" -c user.email="jeanl@localhost"` et le trailer `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`. Le message de commit multi-ligne passe par `-m` multiples ou un fichier (`-F -` ne marche pas en PowerShell). Le push affiche une erreur PowerShell inoffensive.
+- Release : pousser un tag annoté `vX.Y-trace` après CI vert sur le commit ; le CI publie 3 `.bin` (esp8266, esp32, esp32-merged). Vérifier via l'API publique `api.github.com/repos/eljanoc/MHI_CTL_Server/actions/runs`.
+- Ne pas committer `MESSAGE-ABSALOM.md` (brouillon local ; message déjà posté en issue absalom-muc/MHI-AC-Ctrl#225).
+- Sans MQTT, la page doit rester réactive : tester en mettant `0.0.0.0` (MQTT désactivé) ou un broker injoignable.
+- Valeurs par défaut en dur : web `John`/`Pass`, mot de passe AP/OTA `climatiseur`, broker `192.168.0.42`.
