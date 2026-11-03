@@ -4,6 +4,8 @@
 
 Firmware **ESP8266 / ESP32** qui pilote une climatisation **Mitsubishi Heavy Industries (MHI)** en se branchant sur le bus SPI de son unité intérieure. Il la rend contrôlable et observable via **MQTT** (domotique, par exemple Jeedom) et via une **interface web** embarquée.
 
+Il peut aussi fonctionner **en autonome**, sans Jeedom ni broker MQTT : l'ESP seul sert l'interface web pour piloter et surveiller la clim (depuis la V4.26, la page reste réactive même quand aucun broker n'est joignable).
+
 Ce projet est une variante serveur de [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl) enrichie d'un serveur web, d'une configuration en ligne et d'un système de trace des trames.
 
 ## Buts du projet

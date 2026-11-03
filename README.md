@@ -4,6 +4,8 @@
 
 **ESP8266 / ESP32** firmware that controls a **Mitsubishi Heavy Industries (MHI)** air conditioner by connecting to the SPI bus of its indoor unit. It makes the unit controllable and observable through **MQTT** (home automation, e.g. Jeedom) and an embedded **web interface**.
 
+It can also run **standalone**, without Jeedom or any MQTT broker: the ESP alone serves the web interface to control and monitor the unit (since V4.26 the page stays responsive even when no broker is reachable).
+
 This project is a server variant of [MHI-AC-Ctrl](https://github.com/absalom-muc/MHI-AC-Ctrl), extended with a web server, online configuration and a frame trace system.
 
 ## Goals
