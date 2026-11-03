@@ -133,7 +133,7 @@ OTA update is possible through the VS Code task "OTA ESP8266 141" (see `.vscode/
 Versions are managed with Git tags, for example `v4.25-trace`.
 
 ### V4.31
-New "MQTT active" checkbox on the configuration page (`config.json` key `mqtt_enabled`, default on). Unchecked, the module runs standalone without any MQTT attempt (shown as `off`). An empty server or `0.0.0.0` still disables MQTT. `/param_data` and `/NewParam` gain a 10th field (after `Thing`); the Wi-Fi list now starts at index 10.
+New "MQTT active" checkbox on the configuration page (`config.json` key `mqtt_enabled`, default on). Unchecked, the module runs standalone without any MQTT attempt (shown as `off`). The configuration page hides the MQTT IP and port fields when the box is unchecked, and shows the firmware version under the title. An empty server or `0.0.0.0` still disables MQTT. `/param_data` and `/NewParam` gain a 10th field (after `Thing`); the Wi-Fi list now starts at index 10.
 
 ### V4.30
 Fixed buffer overflows: the Wi-Fi network list (`/param_data`) overflowed a 200-byte buffer when several networks were in range, the web setting route (`/SetValue`) used a 30-byte topic buffer, and `/NewParam` crashed on a malformed request. All string copies are now bounded, and `/NewParam` answers 400 on invalid input.

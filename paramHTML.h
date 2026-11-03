@@ -33,6 +33,7 @@ char ParamHtml[] PROGMEM = R"====(
       </tr>
     </tbody>
   </table>
+  <div id="ver" style="text-align:center;color:white;font-size:0.9rem;margin-top:4px;"></div>
   
   <table style="text-align:left;width:300px;margin:auto;color: white;margin-top: 15px;">
     <tbody>
@@ -90,16 +91,16 @@ char ParamHtml[] PROGMEM = R"====(
       <tr>
         <td style="text-align:justify" ;>MQTT actif</td>
         <td>
-          <input type="checkbox" id="mqttEnabled" name="mqttEnabled" checked />
+          <input type="checkbox" id="mqttEnabled"           name="mqttEnabled" onchange="showMqtt()" checked />
         </td>
       </tr>
-      <tr>
+      <tr class="mqttRow">
         <td style="text-align:justify" ;>MQTT IP</td>
         <td>
           <input type="text" style="font-weight: bold;background-color: rgb(189, 202, 238)" id="mqttIP" name="mqttIP" size="13" />
         </td>
       </tr>
-      <tr>
+      <tr class="mqttRow">
         <td style="text-align:justify" ;>MQTT port</td>
         <td>
           <input type="text" style="font-weight: bold;background-color: rgb(189, 202, 238)" id="mqttPort" name="mqttPort" size="4" />
@@ -192,6 +193,11 @@ function restart(mode) {
 });*/
 
 
+function showMqtt() {
+  var on = document.getElementById('mqttEnabled').checked;
+  var rows = document.getElementsByClassName('mqttRow');
+  for (var i = 0; i < rows.length; i++) rows[i].style.display = on ? '' : 'none';
+}
 function LoadData() {
   if (!SIMUL) {
     var xhttp = new XMLHttpRequest();
@@ -208,6 +214,7 @@ function LoadData() {
         document.getElementById('room').value=message[7];
         document.getElementById('thing').value=message[8];
         document.getElementById('mqttEnabled').checked=(message[9]!='0');
+        showMqtt();
       
         var dynamicSelect = document.getElementById("ssid2");
         for (let i = 10,j=0; i < message.length; i+=2,j++) {
@@ -226,6 +233,15 @@ function LoadData() {
     };
     xhttp.open('GET', 'param_data', true);
     xhttp.send();
+    var xv = new XMLHttpRequest();
+    xv.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        var v = this.responseText.split('?')[10] || '';
+        document.getElementById('ver').innerHTML = v.split('&emsp;')[0];
+      }
+    };
+    xv.open('GET', 'ajax_data', true);
+    xv.send();
 /*    xhttp.onerror=function(error){
       document.getElementById('restart').innerHTML = "Restarting...";
       location.reload();
