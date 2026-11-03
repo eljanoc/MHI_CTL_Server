@@ -6,7 +6,7 @@
 #include "MHI-AC-Ctrl.h"
 #include "support.h"
 
-#define WEB_VERSION "V4.28"
+#define WEB_VERSION "V4.29"
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
 
 POWER_STATUS power_status = unknown;
@@ -269,7 +269,6 @@ char* getWebValuesString(char *S) {
   char cWebTsetpoint[8] = "undef";
   if (webTsetpoint < 200)
     sprintf(cWebTsetpoint, "%d°C", webTsetpoint);
-Debug.printf("Server:cWebTsetpoint:%s, webTsetpoint:%d\n",cWebTsetpoint,webTsetpoint);
   char cWebRoomTemp[8] = "undef";
   if (webRoomTemp < 150.0)
     sprintf(cWebRoomTemp, "%.1f°C", webRoomTemp);
@@ -472,18 +471,28 @@ public:
         break;
       case status_tsetpoint:
         webTsetpoint = (value & 0x7f) / 2;
-Debug.printf("case status_tsetpoint:");goto lab1;
+#ifdef TELNET_DEBUG
+        Debug.printf("case status_tsetpoint:");
+#endif
+        goto lab1;
 #ifdef ENHANCED_RESOLUTION
         tmp_value = (value & 0x7f) / 2.0;
         offset = round(tmp_value) - tmp_value;  // Calculate offset when setpoint is changed
         mhi_ac_ctrl_core.set_troom_offset(offset);
 #endif
       case opdata_tsetpoint:
-Debug.printf("case opdata_tsetpoint:");goto lab1;
+#ifdef TELNET_DEBUG
+        Debug.printf("case opdata_tsetpoint:");
+#endif
+        goto lab1;
       case erropdata_tsetpoint:
-Debug.printf("case erropdata_tsetpoint:");
-
-lab1:Debug.printf(" webTsetpoint=%d\n",webTsetpoint);
+#ifdef TELNET_DEBUG
+        Debug.printf("case erropdata_tsetpoint:");
+#endif
+      lab1:
+#ifdef TELNET_DEBUG
+        Debug.printf(" webTsetpoint=%d\n", webTsetpoint);
+#endif
         sprintf(strtmp, "%d", (value & 0x7f) / 2);
         //dtostrf((value & 0x7f) / 2.0, 0, 1, strtmp);
         output_P(status, PSTR(TOPIC_TSETPOINT), strtmp);

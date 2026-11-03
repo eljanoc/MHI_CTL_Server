@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.28-trace)
+# MHI-AC-CtrlServer (V4.29-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -131,6 +131,9 @@ OTA update is possible through the VS Code task "OTA ESP8266 141" (see `.vscode/
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.29
+Cleanup: removed a debug trace that ran on every web request, and guarded the setpoint traces with `TELNET_DEBUG`.
 
 ### V4.28
 Fixed: the "Last reboot" field showed 00/01/1900 0h00 without MQTT, because the date was only recorded on the first MQTT connection. It is now set as soon as the NTP time is known.
