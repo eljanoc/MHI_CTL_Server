@@ -6,6 +6,18 @@
 			"type": "shell",
 			"command": "& 'C:\\Program Files\\Arduino IDE\\resources\\app\\lib\\backend\\resources\\arduino-cli.exe' upload --fqbn esp8266:esp8266:d1_mini --port 192.168.0.141 --protocol network --upload-field password=climatiseur --input-dir 'C:\\Users\\jeanl\\AppData\\Local\\Temp\\MHI-ota-8266\\build'",
 			"isBackground": false
+		},
+		{
+			"label": "OTA ESP32 143",
+			"type": "shell",
+			"command": "& \"$env:LOCALAPPDATA\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.12\\tools\\espota.exe\" -i 192.168.0.143 -p 3232 -P 41234 -a climatiseur -t 20 -f \"$env:TEMP\\MHI-ota-32\\build\\MHI-AC-CtrlServer.ino.bin\"",
+			"isBackground": false
+		},
+		{
+			"label": "OTA ESP32 152",
+			"type": "shell",
+			"command": "& \"$env:LOCALAPPDATA\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.12\\tools\\espota.exe\" -i 192.168.0.152 -p 3232 -P 41234 -a climatiseur -t 20 -f \"$env:TEMP\\MHI-ota-32\\build\\MHI-AC-CtrlServer.ino.bin\"",
+			"isBackground": false
 		}
 	]
 }
