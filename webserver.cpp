@@ -19,36 +19,18 @@ size_t getTraceData(char *output, size_t capacity);
 
 void newValue() {
   int nb = webServer.args();
-#ifdef TELNET_DEBUG
-  Debug.printf("*******************SetValue nb=%d !!!!!!!!!!!!!!!!!!\n",nb);
-  Debug.println(MQTT_SET_PREFIX);
-  Debug.println("Received from webClient");
-#endif
-#ifdef SERIAL_DEBUG
-  Serial.printf("*******************SetValue nb=%d !!!!!!!!!!!!!!!!!!!\n",nb);
-  Serial.println(MQTT_SET_PREFIX);
-  Serial.println("Received from webClient");
-#endif
+  DBG_PRINTF("*******************SetValue nb=%d !!!!!!!!!!!!!!!!!!\n",nb);
+  DBG_PRINTLN(MQTT_SET_PREFIX);
+  DBG_PRINTLN("Received from webClient");
   for (int i = 0; i < nb; i++) {
-#ifdef TELNET_DEBUG
-    Debug.println("Name:" + webServer.argName(i));
-    Debug.println("Value:" + webServer.arg(i));
-#endif
-#ifdef SERIAL_DEBUG
-    Serial.println("Name:" + webServer.argName(i));
-    Serial.println("Value:" + webServer.arg(i));
-#endif
+    DBG_PRINTLN("Name:" + webServer.argName(i));
+    DBG_PRINTLN("Value:" + webServer.arg(i));
     char topic[128];
     String tmpName = webServer.argName(i);
     String payload = webServer.arg(i);
 
     snprintf(topic, sizeof(topic), "%s%s", MQTT_SET_PREFIX, tmpName.c_str());
-#ifdef TELNET_DEBUG
-    Debug.printf("%s:%s\n", topic, payload.c_str());
-#endif
-#ifdef SERIAL_DEBUG
-    Serial.printf("%s:%s\n", topic, payload.c_str());
-#endif
+    DBG_PRINTF("%s:%s\n", topic, payload.c_str());
     MQTT_subscribe_callback(topic, (uint8_t *)payload.c_str(), strlen(payload.c_str()));
   }
   webServer.send(200, "text/plain", String("OK"));

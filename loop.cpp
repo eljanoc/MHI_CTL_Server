@@ -146,12 +146,7 @@ void printInfo();
 void connect() {
   // Loop until we're (re)connected
   if (!MQTTclient.connected()) {
-#ifdef SERIAL_DEBUG
-    Serial.print("Attempting MQTT connection...");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("Attempting MQTT connection...: %s\n", configSSID);
-#endif
+    DBG_PRINTF("Attempting MQTT connection...: %s\n", configSSID);
 
     if (!WiFi.isConnected())
       setWiFi();
@@ -276,14 +271,8 @@ void loop() {
 #endif
     ls.lastPrintMillis = curMillis;
     ls.moyLoop/=ls.nbLoop;
-#ifdef SERIAL_DEBUG
-    Serial.printf("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP:%s, Deconnexions:%d\n",
-                core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), net.nbDeconnect);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP:%s,  Deconnexions:%d\n", 
-                core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), net.nbDeconnect);
-#endif
+    DBG_PRINTF("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP:%s, Deconnexions:%d\n",
+               core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), net.nbDeconnect);
     ls.minLoop=100000;
     ls.nbLoop=ls.maxLoop=ls.moyLoop=0;
   }

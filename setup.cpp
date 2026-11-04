@@ -169,18 +169,10 @@ bool saveJson (bool f){
     json["PreloadFlag"]= "";
   
   File configFile = LittleFS.open("/config.json", "w");
-#ifdef SERIAL_DEBUG
-  if (!configFile) 
-    Serial.println("failed to open config file for writing");
+  if (!configFile)
+    DBG_PRINTLN("failed to open config file for writing");
   else
-    Serial.println("succes writing config file");
-#endif
-#ifdef TELNET_DEBUG
-  if (!configFile) 
-    Debug.println("failed to open config file for writing");
-  else
-    Debug.println("succes writing config file");
-#endif
+    DBG_PRINTLN("succes writing config file");
 
   serializeJson(json,Serial);
   if (!configFile)
@@ -266,20 +258,10 @@ extern ESP8266WebServer webServer;
 
 void newParams() {
   int nb = webServer.args();
-#ifdef TELNET_DEBUG
-  Debug.println("*******************Receive New params !!!!!!!!!!!!!!!!!!!");
-#endif
-#ifdef SERIAL_DEBUG
-  Serial.printf("*******************Receive New params nb=%d!!!!!!!!!!!!!!!!!!!\n",nb);
-#endif
+  DBG_PRINTF("*******************Receive New params nb=%d!!!!!!!!!!!!!!!!!!!\n",nb);
   for (int i = 0; i < nb; i++) {
-#ifdef TELNET_DEBUG
-    Debug.println("Param:" + webServer.argName(i));
-#endif
-#ifdef SERIAL_DEBUG
-    Serial.println("Param:" + webServer.argName(i));
-    Serial.println("value:" + webServer.arg(i));
-#endif
+    DBG_PRINTLN("Param:" + webServer.argName(i));
+    DBG_PRINTLN("value:" + webServer.arg(i));
   }
   mhi::NewParams np;
   if (!mhi::parseNewParams(webServer.arg(0).c_str(), np)) {
@@ -507,9 +489,7 @@ void setup() {
     DBG_PRINTLN("WiFi unavailable; retrying in background");
   }
   saveJson(false);
-#ifdef SERIAL_DEBUG
-  Serial.printf("after wifiManager.autoConnect(%s,%s), connected=%d\n",configSSID, configPW, wifiConnected);
-#endif
+  DBG_SERIAL(printf("after wifiManager.autoConnect(%s,%s), connected=%d\n",configSSID, configPW, wifiConnected));
 #ifdef TELNET_DEBUG
   Debug.begin(configSSID);
 #endif

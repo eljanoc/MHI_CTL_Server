@@ -595,16 +595,9 @@ void loopMHI() {
       timeGood = -1;
     if (mhi_ac_ctrl_core_count)
       TauxDerreurs = ((float)mhi_ac_ctrl_core_error * 100.0) / (float)mhi_ac_ctrl_core_count;
-#ifdef SERIAL_DEBUG
-    Serial.printf_P(PSTR("core:%d,timeGood:%d,Taux erreurs:%.01f%%, mhi_ac_ctrl_core_error: %d / %d\n"), core, timeGood, TauxDerreurs,
-                    mhi_ac_ctrl_core_error, mhi_ac_ctrl_core_count);
-    Serial.println();
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf_P(PSTR("core:%d,timeGood:%d,Taux erreurs:%.01f%%, mhi_ac_ctrl_core_error: %d / %d\n"), core, timeGood, TauxDerreurs,
-                   mhi_ac_ctrl_core_error, mhi_ac_ctrl_core_count);
-    Debug.println();
-#endif
+    DBG_PRINTF_P(PSTR("core:%d,timeGood:%d,Taux erreurs:%.01f%%, mhi_ac_ctrl_core_error: %d / %d\n"), core, timeGood, TauxDerreurs,
+                 mhi_ac_ctrl_core_error, mhi_ac_ctrl_core_count);
+    DBG_PRINTLN();
     mhi_ac_ctrl_core_error = 0;
     mhi_ac_ctrl_core_count = 0;
     timeGood = 0;
