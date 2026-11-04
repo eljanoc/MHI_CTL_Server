@@ -66,7 +66,9 @@ extern RemoteDebug Debug;
 #endif
 void WiFiDisconnectAndRestart();  // loop.cpp
 void setupMHI();                  // MHI-AC-CtrlServer.ino
-bool saveJson(bool f);
+bool saveJson(bool f);       // config.cpp
+void loadConfig();           // config.cpp
+void refreshWifiCache();     // wifi_scan.cpp
 void startWifiRecoveryPortal();
 void handleWifiRecoveryPortal();
 
