@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.34-trace)
+# MHI-AC-CtrlServer (V4.35-trace)
 
 Firmware ESP8266 / ESP32 pour piloter une climatisation Mitsubishi Heavy (SPI) via MQTT et interface web.
 Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branches/tags), pas avec des copies de dossier.
@@ -17,7 +17,7 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 - ESP8266 : carte `esp8266:esp8266:d1_mini`. OTA via la tâche VS Code « OTA ESP8266 141 » (`.vscode\tasks.json`, IP 192.168.0.141, build dans `%TEMP%\MHI-ota-8266\build`).
 - ESP32 : carte `esp32:esp32:esp32doit-devkit-v1` (la carte générique `esp32` échoue : `LED_BUILTIN` absent). Build dans `%TEMP%\MHI-ota-32\build` (core 3.3.12 ; la première compilation après un changement de core prend plus de 5 min, laisser tourner en arrière-plan). Téléversement USB sur COM6 (CH9102) : utiliser `UploadSpeed=115200` (921600 échoue).
 - OTA ESP32 : `arduino-cli upload --protocol network` coupe la connexion (WinError 10053) ; utiliser `espota.exe` directement avec un port local fixe, via les tâches « OTA ESP32 143 » / « OTA ESP32 152 » : `-i <IP> -p 3232 -P 41234 -a climatiseur -t 20 -f ...\MHI-AC-CtrlServer.ino.bin`. Compiler avant de lancer la tâche.
-- Binaires produits dans `bin\` (ignorés par Git) : `MHI8266-V4.34.bin`, `MHI32-V4.34.bin`, `MHI32-V4.34-merged.bin`.
+- Binaires produits dans `bin\` (ignorés par Git) : `MHI8266-V4.35.bin`, `MHI32-V4.35.bin`, `MHI32-V4.35-merged.bin`.
 
 ## Historique / décisions
 - WiFiManager 2.0.17 modifiée pour ESP8266 uniquement : correction dans `getMenuOut()` (cast `__FlashStringHelper`), évite un bouclage au démarrage environ une minute après le boot. Voir README. Garder la correction dans `libs/WiFiManager` et `Documents\Arduino\libraries\WiFiManager`; elle répond au problème observé sur ESP8266, pas à un problème ESP32.
@@ -36,6 +36,7 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 - V4.32 : `/param_data` envoie la liste Wi-Fi en triplets `ssid?mdp?rssi` à partir de l'index 10 (`mhi::appendNetwork`, tampon de 4096 octets alloué dans `webserver.cpp`). La page paramètres (`paramHTML.h`) affiche un `<select id="ssid2">` à côté du champ SSID ; il faut garder JS et format synchronisés.
 - V4.33 : les scans Wi-Fi sont asynchrones et leurs résultats sont mis en cache 30 s pour accélérer `/param_data`. La page principale affiche l'adresse du broker MQTT à la place de `yes` quand il est connecté ; `no` et `off` restent inchangés.
 - V4.34 : la page paramètres compare les champs à leurs valeurs chargées et avertit en cas de départ avec des modifications non enregistrées. Elle ne désactive l'avertissement qu'après confirmation HTTP du serveur lors de l'enregistrement.
+- V4.35 : le portail WiFiManager affiche le signal en dBm : `setScanDispPerc(true)` dans `setup.cpp` et `HTTP_ITEM_QP` modifié (`{R} dBm`) dans `libs/WiFiManager/wm_strings_en.h` / `wm_strings_es.h` (à garder aussi dans `Documents\Arduino\libraries\WiFiManager`). PIEGE : `WiFi.softAPdisconnect()` sans argument laisse l'AP `ESP_xxxxxx` actif (mode AP+STA) ; utiliser `softAPdisconnect(true)` puis `WiFi.mode(WIFI_STA)`.
 - Tests PC : logique pure dans `params_logic.h` (namespace `mhi`, utilisée par `setup.cpp` / `loop.cpp`), tests dans `test/test_params.cpp`, job `test` de la CI. Pas de g++ local : `python -m ziglang c++ -Wall -Wextra -Werror -I. test\test_params.cpp -o "$env:TEMP\test_params.exe"` (sans `-std=c++11`). Vérifié sur le 152 : `/NewParam` répond 400 (trop court/long/vide) et 200 (valide).- V4.30 : correction des débordements de tampon. Utiliser `COPY_STR(dst, src)` (`include.h`, strlcpy borné) et `snprintf` ; plus de `strcpy`/`sprintf` non bornés. `getWebValuesString` et `getParametersString` prennent maintenant la taille du tampon. `/NewParam` renvoie 400 si la chaîne est trop longue ou incomplète (avant : plantage).
 ## Pièges pratiques (à relire avant d'agir)
 - OTA ESP8266 qui marche : `arduino-cli upload` échoue ("No Answer"). Appeler `espota.py` directement avec l'IP du PC (`-I`, ex. 192.168.0.88, à vérifier avec `Get-NetIPAddress`) :

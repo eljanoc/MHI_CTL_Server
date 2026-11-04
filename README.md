@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.34-trace)
+# MHI-AC-CtrlServer (V4.35-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -136,6 +136,9 @@ Tests run on a PC, no board needed: `g++ -I. test/test_params.cpp -o test_params
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.35
+The Wi-Fi configuration portal (AP mode) now shows each network's signal level in dBm instead of icons only (`wm_strings_en.h` / `wm_strings_es.h` of the bundled WiFiManager, plus `setScanDispPerc(true)`). Fixed: once connected, the board kept broadcasting its default `ESP_xxxxxx` access point (AP+STA mode); the AP is now switched off and the board stays in station mode. Removed unused variables.
 
 ### V4.34
 The configuration page warns before leaving when any parameter differs from its loaded value. The warning is cleared after the server confirms a successful save.

@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.34-trace)
+# MHI-AC-CtrlServer (V4.35-trace)
 
 [English](README.md) | **Français**
 
@@ -136,6 +136,9 @@ Les tests tournent sur PC, sans carte : `g++ -I. test/test_params.cpp -o test_pa
 
 ## Versions
 Les versions sont gérées avec des tags Git, par exemple `v4.25-trace`.
+
+### V4.35
+Le portail de configuration Wi-Fi (mode AP) affiche maintenant le niveau de signal de chaque réseau en dBm au lieu des seules icônes (`wm_strings_en.h` / `wm_strings_es.h` de la WiFiManager embarquée, plus `setScanDispPerc(true)`). Corrigé : une fois connectée, la carte continuait à diffuser son point d'accès par défaut `ESP_xxxxxx` (mode AP+STA) ; l'AP est maintenant coupé et la carte reste en station seule. Suppression de variables inutilisées.
 
 ### V4.34
 La page de configuration avertit avant de la quitter lorsqu'au moins un paramètre diffère de sa valeur chargée. L'avertissement est désactivé après confirmation de l'enregistrement par le serveur.

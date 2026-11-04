@@ -25,9 +25,6 @@ char MQTT_ERR_OP_PREFIX[60] = "ErrOpData";
 char debug[60] = "debug";      //Send only
 char service[60] = "service";  //Receive only
 
-char ssid[20]="";
-char password[20]="";
-
 String savedWiFiSSID;
 String savedWiFiPass;
 char configSSID[50] = "";
@@ -184,8 +181,6 @@ extern ESP8266WebServer webServer;
 #endif
 
 void newParams() {
-  char ssid[40]="";
-  char psw[30]="";
   int nb = webServer.args();
 #ifdef TELNET_DEBUG
   Debug.println("*******************Receive New params !!!!!!!!!!!!!!!!!!!");
@@ -459,6 +454,9 @@ void setup() {
   //Defaults to 8%
   wifiManager.setMinimumSignalQuality(5);
 
+  // Portail captif : niveau du signal en texte (dBm) au lieu des seules icônes
+  wifiManager.setScanDispPerc(true);
+
   //Sets timeout until configuration portal gets turned off
   //and retries connecting to the preconfigured AP
   wifiManager.setConfigPortalTimeout(atoi(wifiTimeout) * 60);  //Convert minutes to seconds
@@ -603,7 +601,9 @@ void setup() {
   timeClient.update();
 
   printEspInfo();
-  WiFi.softAPdisconnect();
+  // softAPdisconnect() seul laissait le mode AP+STA actif (SSID ESP_xxxxxx visible) : on repasse en station seule
+  WiFi.softAPdisconnect(true);
+  WiFi.mode(WIFI_STA);
 #if defined(WEB_SERVER) || defined (AS_WEB_SERVER)
   loadWebServer ();
 #endif

@@ -6,7 +6,7 @@
 #include "MHI-AC-Ctrl.h"
 #include "support.h"
 
-#define WEB_VERSION "V4.34"
+#define WEB_VERSION "V4.35"
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
 
 POWER_STATUS power_status = unknown;
@@ -598,7 +598,6 @@ size_t getTraceData(char *output, size_t capacity) {
 void loopMHI() {
 
   static byte ds18x20_value_old = 0;
-  static unsigned long previousMillis = millis();
   unsigned long int myTmpTime = millis();
 
 #if TEMP_MEASURE_PERIOD > 0

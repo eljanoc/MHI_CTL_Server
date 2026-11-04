@@ -53,9 +53,6 @@ bool debugit = false;  //Send some info (eg. MHI SPI bit field updates and error
 bool modeInfo = false;
 int connectionFails = 0;  //Count number of failed MQTT connection attempts for restart
 
-//                               HEAT        COOL        AUTO        DRY         FAN
-static byte modeValues[5] = { 0b00010001, 0b00001001, 0b00000001, 0b00000101, 0b00001101 };  //Used to extract current mode from bit field 4
-
 void startConfigPortal();
 
 void WiFiDisconnectAndRestart() {  
@@ -338,8 +335,6 @@ static void loopWebServer(void){}
   void loopWebServer(void);
 #endif
 
-extern char ssid[];
-extern char password[];
 void listNetworks();
 
 void loopMHI();
