@@ -52,7 +52,7 @@ void WiFiDisconnectAndRestart() {
   delay(1000);
 }
 
-void saveJson (bool);
+bool saveJson (bool);
 void stateTest(){
   if (!app.stateFlag)
     return;

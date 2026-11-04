@@ -143,7 +143,8 @@ char *getParametersString (char *tmp, size_t size)
   return tmp;
 }
 
-void saveJson (bool f){
+// Renvoie false si config.json n'a pas pu être écrit entièrement
+bool saveJson (bool f){
 #ifdef SERIAL_DEBUG
   Serial.printf("saveJson\n");
   Serial.println("saving config");
@@ -185,9 +186,14 @@ void saveJson (bool f){
 #endif
 
   serializeJson(json,Serial);
-  serializeJson(json,configFile);
+  if (!configFile)
+    return false;
+  size_t written = serializeJson(json,configFile);
   configFile.close();
-    //end save
+  bool ok = (written == measureJson(json));
+  if (!ok)
+    DBG_PRINTF("config.json incomplete: %u/%u bytes\n", (unsigned)written, (unsigned)measureJson(json));
+  return ok;
 }
 
 static void applyWifiPortalParameters() {
@@ -283,7 +289,6 @@ void newParams() {
     webServer.send(400, "text/plain", "400: Invalid Request");
     return;
   }
-  webServer.send(200, "text/plain", "restarting...");
   mhi::applyNewParams(config, np);
 
 #ifdef SERIAL_DEBUG
@@ -300,7 +305,12 @@ Serial.printf("PreloadSSID:%s\n",config.PreloadSSID);
 Serial.printf("PreloadPSW:%s\n",config.PreloadPSW);
 #endif
 
-  saveJson(true);
+  if (!saveJson(true)) {
+    webServer.send(500, "text/plain", "500: config.json write failed");
+    return;
+  }
+  webServer.send(200, "text/plain", "restarting...");
+  delay(200);  // laisse partir la réponse avant le redémarrage
   ESP.restart();
 }
 
