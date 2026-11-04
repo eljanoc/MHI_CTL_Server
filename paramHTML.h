@@ -148,6 +148,42 @@ const  char ParamJS[] PROGMEM= R"====(
 var SIMUL = false;
 var saveSSID='';
 var savePass='';
+var initialParameterValues = null;
+var saveInProgress = false;
+
+function getParameterValues() {
+  return [
+    document.getElementById('ssid3').value,
+    document.getElementById('password').value,
+    document.getElementById('staticIP').value,
+    document.getElementById('masqIP').value,
+    document.getElementById('gatewayIP').value,
+    document.getElementById('dnsIP').value,
+    document.getElementById('mqttIP').value,
+    document.getElementById('mqttPort').value,
+    document.getElementById('wifiTimeout').value,
+    document.getElementById('room').value,
+    document.getElementById('thing').value,
+    document.getElementById('mqttEnabled').checked
+  ];
+}
+
+function hasUnsavedChanges() {
+  if (!initialParameterValues) return false;
+  var currentValues = getParameterValues();
+  for (var i = 0; i < currentValues.length; i++) {
+    if (currentValues[i] !== initialParameterValues[i]) return true;
+  }
+  return false;
+}
+
+window.addEventListener('beforeunload', function (event) {
+  if (!saveInProgress && hasUnsavedChanges()) {
+    event.preventDefault();
+    event.returnValue = '';
+  }
+});
+
 function myFunction() {
   var x = document.getElementById("password");
   if (x.type === "password") {
@@ -236,6 +272,7 @@ function LoadData() {
             document.getElementById("ssid3").placeholder=message[i];
           }
         }
+        initialParameterValues = getParameterValues();
       }
     };
     xhttp.open('GET', 'param_data', true);
@@ -260,7 +297,8 @@ function saveParam() {
   if (window.confirm("save Param : êtes vous sur ??")) {
     val=document.getElementById("ssid3").value;
 
-    document.getElementById('restart').innerHTML = "Restarting...";
+    saveInProgress = true;
+    document.getElementById('restart').innerHTML = "Enregistrement...";
     var S='NewParam?param='+
     document.getElementById('staticIP').value+'?'+
     document.getElementById('masqIP').value+'?'+
@@ -277,16 +315,22 @@ function saveParam() {
 
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function () {
-//      if (this.readyState == 4){// && this.status == 200) 
-      {
-        var retour = this.responseText;
-        setTimeout('location.reload();', 2000);
+      if (this.readyState == 4) {
+        if (this.status == 200) {
+          initialParameterValues = getParameterValues();
+          document.getElementById('restart').innerHTML = "Restarting...";
+          setTimeout('location.reload();', 2000);
+        } else {
+          saveInProgress = false;
+          document.getElementById('restart').innerHTML = "Erreur lors de l'enregistrement des paramètres.";
+        }
       }
     };
     xhttp.open('POST', S, true);
     xhttp.send();
-    xhttp.onerror=function(error){
-      location.reload();
+    xhttp.onerror=function(){
+      saveInProgress = false;
+      document.getElementById('restart').innerHTML = "Erreur lors de l'enregistrement des paramètres.";
     };
   }
 }

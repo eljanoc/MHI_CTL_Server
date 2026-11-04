@@ -6,7 +6,7 @@
 #include "MHI-AC-Ctrl.h"
 #include "support.h"
 
-#define WEB_VERSION "V4.32"
+#define WEB_VERSION "V4.34"
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
 
 POWER_STATUS power_status = unknown;
@@ -183,6 +183,7 @@ extern char webIpChNO[40];
 extern char webIpCuisine[40];
 extern char Thing[];
 extern char MQTTconnectedFlag[4];
+extern char mqtt_server[16];
 char* getWebValuesString(char *S, size_t size) {
 #ifdef ESP32
   #ifdef MULTICORE
@@ -215,6 +216,7 @@ char* getWebValuesString(char *S, size_t size) {
   char cWebRoomTempExt[8] = "undef";
   if (webRoomTempExt < 150.0)
     sprintf(cWebRoomTempExt, "%.1f°C", webRoomTempExt);
+  const char *cMqttState = (strcmp(MQTTconnectedFlag, "yes") == 0) ? mqtt_server : MQTTconnectedFlag;
   snprintf(S, size, "Deb?%s?%s?%s?%s?%s?%s?%s?%d?Warning: Taux d'erreurs=%.1f%%?%s %s&emsp;Last reboot : %02d/%02d/%d %2dh%02d?%s?%s?%s?%s?%s?Fin", 
     Thing,webModeTab[webMode], cWebTsetpoint, webFanTab[webFan], webVanesTab[webVanes], cWebRoomTemp, cWebRoomTempExt, webPower,
           TauxDerreurs,// warning,
@@ -224,7 +226,7 @@ char* getWebValuesString(char *S, size_t size) {
           tReboot.tm_year + 1900,
           tReboot.tm_hour, /* Hours.   [0-23]      */
           tReboot.tm_min,  /* Minutes. [0-59]      */
-          webPuissance, webIpSalon, webIpChNO, webIpCuisine,MQTTconnectedFlag);
+          webPuissance, webIpSalon, webIpChNO, webIpCuisine,cMqttState);
 #ifdef SERIAL_DEBUG
 #endif
   return S;

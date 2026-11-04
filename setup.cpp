@@ -81,23 +81,47 @@ void listNetworks() {
 #endif
 }
 
+// Le scan Wi-Fi bloquant prenait plusieurs secondes à chaque affichage de la page Paramètres :
+// scan asynchrone, résultats copiés dans un cache réutilisé par /param_data.
+#define WIFI_CACHE_MAX 20
+#define WIFI_CACHE_AGE_MS 30000UL
+static struct { String ssid; int rssi; } wifiCache[WIFI_CACHE_MAX];
+static int wifiCacheCount = 0;
+static unsigned long wifiCacheTime = 0;
+static bool wifiCacheValid = false;
+
+void refreshWifiCache() {
+  int n = WiFi.scanComplete();
+  if (n >= 0) {
+    wifiCacheCount = (n > WIFI_CACHE_MAX) ? WIFI_CACHE_MAX : n;
+    for (int i = 0; i < wifiCacheCount; i++) {
+      wifiCache[i].ssid = WiFi.SSID(i);
+      wifiCache[i].rssi = WiFi.RSSI(i);
+    }
+    WiFi.scanDelete();
+    wifiCacheTime = millis();
+    wifiCacheValid = true;
+  } else if (n == WIFI_SCAN_RUNNING) {
+    return;
+  }
+  if (!wifiCacheValid || millis() - wifiCacheTime > WIFI_CACHE_AGE_MS)
+    WiFi.scanNetworks(true);
+}
+
 char *getParametersString (char *tmp, size_t size)
 {
   mhi::buildParamsBase(tmp, size, staticIP, masqueIP, gatewayIP, dnsIP, mqtt_server, mqtt_port,
                        wifiTimeout, Room, Thing, mqtt_enabled);
-  int numSsid = WiFi.scanNetworks();
-  if (numSsid > 0) 
-  // print the network number and name for each network found:
-    for (int thisNet = 0; thisNet < numSsid; thisNet++) {
-      String netSsid = WiFi.SSID(thisNet);
+  refreshWifiCache();
+  for (int thisNet = 0; thisNet < wifiCacheCount; thisNet++) {
 #ifdef SERIAL_DEBUG
-      Serial.printf("\(%d\) %s \tSignal:%d dBm\n",thisNet,netSsid.c_str(),WiFi.RSSI(thisNet));
+    Serial.printf("\(%d\) %s \tSignal:%d dBm\n",thisNet,wifiCache[thisNet].ssid.c_str(),wifiCache[thisNet].rssi);
 #endif
-      // Réseau suivant ignoré s'il ne tient plus dans le tampon
-      if (!mhi::appendNetwork(tmp, size, netSsid.c_str(), savedWiFiSSID.c_str(),
-                              savedWiFiPass.c_str(), WiFi.RSSI(thisNet)))
-        break;
-    }
+    // Réseau suivant ignoré s'il ne tient plus dans le tampon
+    if (!mhi::appendNetwork(tmp, size, wifiCache[thisNet].ssid.c_str(), savedWiFiSSID.c_str(),
+                            savedWiFiPass.c_str(), wifiCache[thisNet].rssi))
+      break;
+  }
 #ifdef SERIAL_DEBUG
   Serial.printf("parametersString len:%d\n",strlen(tmp));
 #endif
@@ -583,6 +607,7 @@ void setup() {
 #if defined(WEB_SERVER) || defined (AS_WEB_SERVER)
   loadWebServer ();
 #endif
+  refreshWifiCache();
   setupMHI();
 }
 

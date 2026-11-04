@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.32-trace)
+# MHI-AC-CtrlServer (V4.34-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -136,6 +136,12 @@ Tests run on a PC, no board needed: `g++ -I. test/test_params.cpp -o test_params
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.34
+The configuration page warns before leaving when any parameter differs from its loaded value. The warning is cleared after the server confirms a successful save.
+
+### V4.33
+The configuration page now returns cached Wi-Fi scan results instead of waiting for a blocking scan on every request. Scans run asynchronously and the cache is refreshed every 30 seconds. On the main page, MQTT status now shows the broker address when connected; `no` and `off` remain unchanged.
 
 ### V4.32
 The configuration page now lists the Wi-Fi networks in range in a drop-down next to the SSID field, each with its signal level in dBm. Picking one fills the SSID and, for the saved network, its password; typing an SSID by hand still works. The Wi-Fi list in `/param_data` is now made of triplets (SSID, password, RSSI) starting at index 10, and the response buffer grew to 4096 bytes. Automated PC tests of the parameter logic were added (`test/test_params.cpp`).
