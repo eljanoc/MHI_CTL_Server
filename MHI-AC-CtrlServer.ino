@@ -25,19 +25,9 @@ extern char service[40];
 
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
   payload[length] = 0;  // we need a string
-#ifdef SERIAL_DEBUG
-  Serial.printf_P(PSTR("MQTT_subscribe_callback, topic=%s payload=%s payload_length=%i\n"), topic, (char*)payload, length);
-#endif
-#ifdef TELNET_DEBUG
-  Debug.printf_P(PSTR("MQTT_subscribe_callback, topic=%s payload=%s payload_length=%i\n"), topic, (char*)payload, length);
-#endif
+  DBG_PRINTF_P(PSTR("MQTT_subscribe_callback, topic=%s payload=%s payload_length=%i\n"), topic, (char*)payload, length);
   if (!strcmp((const char*)topic, (const char*)service)) {
-#ifdef SERIAL_DEBUG
-    Serial.printf("received service\n");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("received service\n");
-#endif
+    DBG_PRINTF("received service\n");
     TopicService(payload, length);
     return;
   }
@@ -139,12 +129,7 @@ void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int leng
       troom_was_set_by_MQTT = true;
       byte tmp = f * 4 + 61;
       mhi_ac_ctrl_core.set_troom(f * 4 + 61);
-#ifdef SERIAL_DEBUG
-      Serial.printf("ROOM_TEMP_MQTT: %f %i %i\n", f, (byte)(f * 4 + 61), (byte)tmp);
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("ROOM_TEMP_MQTT: %f %i %i\n", f, (byte)(f * 4 + 61), (byte)tmp);
-#endif
+      DBG_PRINTF("ROOM_TEMP_MQTT: %f %i %i\n", f, (byte)(f * 4 + 61), (byte)tmp);
       publish_cmd_ok();
     } else
       publish_cmd_invalidparameter();
@@ -246,35 +231,15 @@ public:
         // Only when setting fan to Auto one time after powerdown AC, it will show 4 and Auto.
         // Below will take care of this.
         if (power_status == unknown) {  // First time after startup esp
-#ifdef SERIAL_DEBUG
-          Serial.printf("power_status: unknown; received status_power: %i\n", value);
-#endif
-#ifdef TELNET_DEBUG
-          Debug.printf("power_status: unknown; received status_power: %i\n", value);
-#endif
+          DBG_PRINTF("power_status: unknown; received status_power: %i\n", value);
           if (value == power_off) {  // Only when status is power off, set fan to Auto.
-#ifdef SERIAL_DEBUG
-            Serial.println("Set fan to Auto to fix fan status after powerdown (230V) AC");
-#endif
-#ifdef TELNET_DEBUG
-            Debug.println("Set fan to Auto to fix fan status after powerdown (230V) AC");
-#endif
+            DBG_PRINTLN("Set fan to Auto to fix fan status after powerdown (230V) AC");
             mhi_ac_ctrl_core.set_fan(7);
           }
         } else if (power_status == off) {
-#ifdef SERIAL_DEBUG
-          Serial.printf("power_status: off; received status_power: %i\n", value);
-#endif
-#ifdef TELNET_DEBUG
-          Debug.printf("power_status: off; received status_power: %i\n", value);
-#endif
+          DBG_PRINTF("power_status: off; received status_power: %i\n", value);
         } else if (power_status == on) {
-#ifdef SERIAL_DEBUG
-          Serial.printf("power_status: on; received status_power: %i\n", value);
-#endif
-#ifdef TELNET_DEBUG
-          Debug.printf("power_status: on; received status_power: %i\n", value);
-#endif
+          DBG_PRINTF("power_status: on; received status_power: %i\n", value);
         }
         if (value == power_on) {
           webPower = true;
@@ -604,12 +569,7 @@ void loopMHI() {
     if ((ds18x20_value > 21) & (ds18x20_value < 253)) {  // use only values -10°C < T < 48°C
       mhi_ac_ctrl_core.set_troom(ds18x20_value);
       ds18x20_value_old = ds18x20_value;
-#ifdef SERIAL_DEBUG
-      Serial.printf("update Troom based on DS18x20 value %i\n", ds18x20_value);
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("update Troom based on DS18x20 value %i\n", ds18x20_value);
-#endif
+      DBG_PRINTF("update Troom based on DS18x20 value %i\n", ds18x20_value);
     }
   }
 #endif
@@ -618,12 +578,7 @@ void loopMHI() {
   // fallback to AC internal Troom temperature sensor
   if (troom_was_set_by_MQTT & (millis() - room_temp_set_timeout_Millis >= ROOM_TEMP_MQTT_SET_TIMEOUT * 1000)) {
     mhi_ac_ctrl_core.set_troom(0xff);  // use IU temperature sensor
-#ifdef SERIAL_DEBUG
-    Serial.println(F("ROOM_TEMP_MQTT_SET_TIMEOUT exceeded, use IU temperature sensor value!"));
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println(F("ROOM_TEMP_MQTT_SET_TIMEOUT exceeded, use IU temperature sensor value!"));
-#endif
+    DBG_PRINTLN(F("ROOM_TEMP_MQTT_SET_TIMEOUT exceeded, use IU temperature sensor value!"));
     troom_was_set_by_MQTT = false;
   }
   int ret = mhi_ac_ctrl_core.loop(80);

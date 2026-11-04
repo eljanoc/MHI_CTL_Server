@@ -47,5 +47,21 @@ extern mhi::NetStats net;
 extern mhi::LoopState loopState;
 extern mhi::AppControl app;  // Définies dans loop.cpp
 
+// Traces de debug : écrivent sur Serial (SERIAL_DEBUG) et/ou Telnet (TELNET_DEBUG), sinon rien
+#ifdef SERIAL_DEBUG
+#define DBG_SERIAL(call) Serial.call
+#else
+#define DBG_SERIAL(call)
+#endif
+#ifdef TELNET_DEBUG
+#define DBG_TELNET(call) Debug.call
+#else
+#define DBG_TELNET(call)
+#endif
+#define DBG_PRINT(...) do { DBG_SERIAL(print(__VA_ARGS__)); DBG_TELNET(print(__VA_ARGS__)); } while (0)
+#define DBG_PRINTLN(...) do { DBG_SERIAL(println(__VA_ARGS__)); DBG_TELNET(println(__VA_ARGS__)); } while (0)
+#define DBG_PRINTF(...) do { DBG_SERIAL(printf(__VA_ARGS__)); DBG_TELNET(printf(__VA_ARGS__)); } while (0)
+#define DBG_PRINTF_P(...) do { DBG_SERIAL(printf_P(__VA_ARGS__)); DBG_TELNET(printf_P(__VA_ARGS__)); } while (0)
+
 // Copie bornée vers un tableau de char (tronque au lieu de déborder)
 #define COPY_STR(dst, src) strlcpy((dst), (src), sizeof(dst))

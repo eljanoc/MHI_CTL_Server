@@ -85,12 +85,7 @@ static void webServerTaskSetup() {
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
 //  webServer.on("/", [](AsyncWebServerRequest *request){
 //    request->send_P(200, "text/html", index_html, processor);
-#ifdef SERIAL_DEBUG
-      Serial.printf("webServer.on\n");
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("webServer.on\n");
-#endif
+      DBG_PRINTF("webServer.on\n");
     request->send_P(200, "text/html", MainHtml);
   });
 #if 0
@@ -104,12 +99,7 @@ static void webServerTaskSetup() {
 #endif
 
   webServer.on("/MainJS", [](AsyncWebServerRequest *request) {
-#ifdef SERIAL_DEBUG
-    Serial.println("request MainJS");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("request MainJS");
-#endif
+    DBG_PRINTLN("request MainJS");
     request->send_P(200, "text/html", MainJS);
   });
   webServer.on("/SetValue", newValue);
@@ -139,12 +129,7 @@ static void webServerTask(void *pvParameters) {
       vTaskDelay(10);
       esp_task_wdt_reset();  //Reset du Watchdog toutes  les 1s
       lastResetWDT=curMillis;
-#ifdef SERIAL_DEBUG
-      Serial.printf("Core:%d aSyncWebServer\n", xPortGetCoreID());
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("Core:%d aSyncWebServer\n", xPortGetCoreID());
-#endif
+      DBG_PRINTF("Core:%d aSyncWebServer\n", xPortGetCoreID());
     }
   }
 }

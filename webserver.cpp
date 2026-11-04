@@ -125,22 +125,12 @@ static void webServerTaskSetup() {
   });
 
   webServer.on("/MainJS", []() {
-#ifdef SERIAL_DEBUG
-    Serial.println("request MainJS");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("request MainJS");
-#endif
+    DBG_PRINTLN("request MainJS");
     webServer.send_P(200, "text/html", MainJS);
   });
 
   webServer.on("/ParamJS", []() {
-#ifdef SERIAL_DEBUG
-    Serial.println("request ParamJS");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("request ParamJS");
-#endif
+    DBG_PRINTLN("request ParamJS");
     webServer.send_P(200, "text/html", ParamJS);
   });
 
@@ -231,12 +221,7 @@ static void webServerTask(void *pvParameters) {
     loopWebServer();
     if (nbLoop && (curMillis - lastPrintMillis) > 4000) {
       lastPrintMillis = curMillis;
-#ifdef SERIAL_DEBUG
-      Serial.printf("Core:%d, nbLoop:%d\n", core, nbLoop);
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("Core:%d, nbLoop:%d\n", core, nbLoop);
-#endif
+      DBG_PRINTF("Core:%d, nbLoop:%d\n", core, nbLoop);
       nbLoop = 0;
     } else
       nbLoop++;

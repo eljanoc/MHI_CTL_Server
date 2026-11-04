@@ -61,28 +61,13 @@ void stateTest(){
   switch (state)
   {
     case GO_REINIT:{
-#ifdef SERIAL_DEBUG
-      Serial.println("Reinit");
-#endif
-#ifdef TELNET_DEBUG
-      Debug.println("Reinit");
-#endif
+      DBG_PRINTLN("Reinit");
 
       bool formated = LittleFS.format();  //Erase flash
       if (formated) {
-#ifdef SERIAL_DEBUG
-        Serial.printf("format succes\n");
-#endif
-#ifdef TELNET_DEBUG
-        Debug.printf("format succes\n");
-#endif
+        DBG_PRINTF("format succes\n");
       } else {
-#ifdef SERIAL_DEBUG
-        Serial.printf("format error\n");
-#endif
-#ifdef TELNET_DEBUG
-        Debug.printf("format error\n");
-#endif
+        DBG_PRINTF("format error\n");
       }
     }
     case GO_WIFIMANAGER:
@@ -207,50 +192,25 @@ void connect() {
     MQTTclient.setSocketTimeout(1);
     if (MQTTclient.connect(configSSID, config.mqtt_user, config.mqtt_pass)) 
     {
-#ifdef SERIAL_DEBUG
-      Serial.println("connected!");
-#endif
-#ifdef TELNET_DEBUG
-      Debug.println("connected!");
-#endif
+      DBG_PRINTLN("connected!");
 
       //Subscribe to topics that control the MHI state
       char tmp[100];
       sprintf(tmp, "%s#", MQTT_SET_PREFIX);
       MQTTclient.subscribe(tmp, 1);
-#ifdef SERIAL_DEBUG
-      Serial.printf("Subscribe to :%s\n", tmp);
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("Subscribe to :%s\n", tmp);
-#endif
+      DBG_PRINTF("Subscribe to :%s\n", tmp);
 
       sprintf(tmp, "%s/#", MQTT_OP_PREFIX);
       MQTTclient.subscribe(tmp, 1);
-#ifdef SERIAL_DEBUG
-      Serial.printf("Subscribe to :%s\n", tmp);
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("Subscribe to :%s\n", tmp);
-#endif
+      DBG_PRINTF("Subscribe to :%s\n", tmp);
 
       sprintf(tmp, "%s/#", MQTT_ERR_OP_PREFIX);
       MQTTclient.subscribe(tmp, 1);
-#ifdef SERIAL_DEBUG
-      Serial.printf("Subscribe to :%s\n", tmp);
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("Subscribe to :%s\n", tmp);
-#endif
+      DBG_PRINTF("Subscribe to :%s\n", tmp);
 
       sprintf(tmp, "%s/#", service);
       MQTTclient.subscribe(tmp, 1);
-#ifdef SERIAL_DEBUG
-      Serial.printf("Subsribe to %s\n", tmp);
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("Subsribe to %s\n", tmp);
-#endif
+      DBG_PRINTF("Subsribe to %s\n", tmp);
 
       printInfo();
       sendConnexion2mqtt(true);
@@ -259,46 +219,16 @@ void connect() {
     } 
     else 
     {
-#ifdef SERIAL_DEBUG
-      Serial.print("failed, rc = ");
-#endif
-#ifdef TELNET_DEBUG
-      Debug.print("failed, rc = ");
-#endif
-#ifdef SERIAL_DEBUG
-      Serial.println(MQTTclient.state());
-#endif
-#ifdef TELNET_DEBUG
-      Debug.println(MQTTclient.state());
-#endif
-#ifdef SERIAL_DEBUG
-      Serial.print("Failed connection attempts: ");
-#endif
-#ifdef TELNET_DEBUG
-      Debug.print("Failed connection attempts: ");
-#endif
-#ifdef SERIAL_DEBUG
-      Serial.println(net.connectionFails);
-#endif
-#ifdef TELNET_DEBUG
-      Debug.println(net.connectionFails);
-#endif
+      DBG_PRINT("failed, rc = ");
+      DBG_PRINTLN(MQTTclient.state());
+      DBG_PRINT("Failed connection attempts: ");
+      DBG_PRINTLN(net.connectionFails);
 
       if (++net.connectionFails == 30) {
-#ifdef SERIAL_DEBUG
-        Serial.println("MQTT broker connection timeout...restarting!");
-#endif
-#ifdef TELNET_DEBUG
-        Debug.println("MQTT broker connection timeout...restarting!");
-#endif
+        DBG_PRINTLN("MQTT broker connection timeout...restarting!");
         ESP.restart();
       }
-#ifdef SERIAL_DEBUG
-      Serial.println("Try again in 5 seconds...");
-#endif
-#ifdef TELNET_DEBUG
-      Debug.println("Try again in 5 seconds...");
-#endif
+      DBG_PRINTLN("Try again in 5 seconds...");
       strcpy(web.mqttState,"no");
     }
   }
@@ -393,12 +323,7 @@ void loop() {
     strcpy(web.mqttState, "off");
   if (!mqttDisabled && !MQTTclient.connected() &&
       (!mqttReconnectAttempted || curMillis - lastMQTTReconnectMillis >= 5000)) {
-#ifdef SERIAL_DEBUG
-    Serial.printf("MQTT deconnected, call connect()\n");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("MQTT deconnected, call connect()\n");
-#endif
+    DBG_PRINTF("MQTT deconnected, call connect()\n");
     mqttReconnectAttempted = true;
     lastMQTTReconnectMillis = curMillis;
     connect();  //Connect first time. Reconnect when connection lost.
@@ -420,12 +345,7 @@ uint32_t traceDropped();
 void TopicService(unsigned char *payload, unsigned int length) {
   //SERVICE COMMANDS
   if (strcmp((const char *)payload, "reboot") == 0) {
-#ifdef SERIAL_DEBUG
-    Serial.printf("reboot\n");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("reboot\n");
-#endif
+    DBG_PRINTF("reboot\n");
     MQTTclient.publish(debug, " << Rebooting... >>", false);
     delay(5000);
     ESP.restart();  //Now restart ESP
@@ -436,12 +356,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
 
   if (char *value=strstr((const char *)payload, "puissance=")) {
     snprintf(web.puissance, sizeof(web.puissance), "%sW", value+strlen("puissance="));
-#ifdef SERIAL_DEBUG
-    Serial.printf("webPuissance=%s\n",web.puissance);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("webPuissance=%s\n",web.puissance);
-#endif
+    DBG_PRINTF("webPuissance=%s\n",web.puissance);
     return;
   }
 
@@ -449,12 +364,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
     COPY_STR(web.ipSalon,(const char *)&payload[strlen("ipSalon:\"")]);
     if (web.ipSalon[0])
       web.ipSalon[strlen(web.ipSalon)-1]=0;
-#ifdef SERIAL_DEBUG
-    Serial.printf("webIpSalon:%s\n",web.ipSalon);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("webIpSalon:%s\n",web.ipSalon);
-#endif
+    DBG_PRINTF("webIpSalon:%s\n",web.ipSalon);
     return;
   }
 
@@ -462,12 +372,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
     COPY_STR(web.ipChNO,(const char *)&payload[strlen("ipChNO:\"")]);
     if (web.ipChNO[0])
       web.ipChNO[strlen(web.ipChNO)-1]=0;
-#ifdef SERIAL_DEBUG
-    Serial.printf("webIpChNO:%s\n",web.ipChNO);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("webIpChNO:%s\n",web.ipChNO);
-#endif
+    DBG_PRINTF("webIpChNO:%s\n",web.ipChNO);
     return;
   }
 
@@ -475,40 +380,20 @@ void TopicService(unsigned char *payload, unsigned int length) {
     COPY_STR(web.ipCuisine,(const char *)&payload[strlen("ipCuisine:\"")]);
     if (web.ipCuisine[0])
       web.ipCuisine[strlen(web.ipCuisine)-1]=0;
-#ifdef SERIAL_DEBUG
-    Serial.printf("webIpCuisine:%s\n",web.ipCuisine);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("webIpCuisine:%s\n",web.ipCuisine);
-#endif
+    DBG_PRINTF("webIpCuisine:%s\n",web.ipCuisine);
     return;
   }
 
   if (strcmp((const char *)payload, "reinit") == 0)  //Start WiFiManager after erasing previously stored settings
   {
-#ifdef SERIAL_DEBUG
-    Serial.println("Reinit");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("Reinit");
-#endif
+    DBG_PRINTLN("Reinit");
     MQTTclient.publish(debug, " << Reinitializing...(erase flash, reboot and start WiFiManager) >>", false);
     delay(500);
     bool formated = LittleFS.format();  //Erase flash
     if (formated) {
-#ifdef SERIAL_DEBUG
-      Serial.printf("format succes\n");
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("format succes\n");
-#endif
+      DBG_PRINTF("format succes\n");
     } else {
-#ifdef SERIAL_DEBUG
-      Serial.printf("format error\n");
-#endif
-#ifdef TELNET_DEBUG
-      Debug.printf("format error\n");
-#endif
+      DBG_PRINTF("format error\n");
     }
     WiFiDisconnectAndRestart();
     return;
@@ -516,12 +401,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
 
   if (strcmp((const char *)payload, "wifidisconnect") == 0)  //Start WiFiManager after erasing previously stored settings
   {
-#ifdef SERIAL_DEBUG
-    Serial.println("wifi disconnect");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("wifi disconnect");
-#endif
+    DBG_PRINTLN("wifi disconnect");
     MQTTclient.publish(debug, " << WiFi disconnect >>", false);
     delay(500);
     WiFi.disconnect();  //Start WiFiManager  for reconfiguration
@@ -530,12 +410,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
 
   if (strcmp((const char *)payload, "wifimanager") == 0)  //Start WiFiManager with previously stored settings
   {
-#ifdef SERIAL_DEBUG
-    Serial.println("Wifimanager");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("Wifimanager");
-#endif
+    DBG_PRINTLN("Wifimanager");
     MQTTclient.publish(debug, " << Starting WiFiManager... >>", false);
 
     WiFiDisconnectAndRestart();
@@ -544,12 +419,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
 
   if (strcmp((const char *)payload, "debugon") == 0)  //Send some info on debug payload, see debug2mqtt() in the code
   {
-#ifdef SERIAL_DEBUG
-    Serial.println("debugon");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("debugon");
-#endif
+    DBG_PRINTLN("debugon");
     MQTTclient.publish(debug, " << Debug ON >>", false);
     app.debugit = true;
     return;
@@ -570,23 +440,13 @@ void TopicService(unsigned char *payload, unsigned int length) {
   }
 
   if (strcmp((const char *)payload, "connexion") == 0) {
-#ifdef SERIAL_DEBUG
-    Serial.println("connexion");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("connexion");
-#endif
+    DBG_PRINTLN("connexion");
     sendConnexion2mqtt(false);
     return;
   }
 
   if (strcmp((const char *)payload, "debugoff") == 0) {
-#ifdef SERIAL_DEBUG
-    Serial.println("debugoff");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("debugoff");
-#endif
+    DBG_PRINTLN("debugoff");
     MQTTclient.publish(debug, " << Debug OFF >>", false);
     app.debugit = false;
     return;
@@ -599,12 +459,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
   }
 
   if (strcmp((const char *)payload, "infoOn") == 0) {
-#ifdef SERIAL_DEBUG
-    Serial.printf("infOn\n");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("infOn\n");
-#endif
+    DBG_PRINTF("infOn\n");
 
     MQTTclient.publish(debug, "Info On", false);
     app.modeInfo = true;
@@ -612,21 +467,11 @@ void TopicService(unsigned char *payload, unsigned int length) {
   }
 
   if (strcmp((const char *)payload, "infoOff") == 0) {
-#ifdef SERIAL_DEBUG
-    Serial.printf("infOff\n");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("infOff\n");
-#endif
+    DBG_PRINTF("infOff\n");
     MQTTclient.publish(debug, "Info Off", false);
     app.modeInfo = false;
     return;
   }
   MQTTclient.publish(debug, " << Unknown service command >>", false);
-#ifdef SERIAL_DEBUG
-  Serial.println("unknown");
-#endif
-#ifdef TELNET_DEBUG
-  Debug.println("unknown");
-#endif
+  DBG_PRINTLN("unknown");
 }

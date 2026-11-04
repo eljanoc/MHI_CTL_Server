@@ -26,14 +26,7 @@ void MeasureFrequency() {  // measure the frequency on the pins
   pinMode(SCK_PIN, INPUT);
   pinMode(MOSI_PIN, INPUT);
   pinMode(MISO_PIN, INPUT);
-  {
-#ifdef SERIAL_DEBUG
-    Serial.println(F("Measure frequency for SCK, MOSI and MISO pin"));
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println(F("Measure frequency for SCK, MOSI and MISO pin"));
-#endif
-  }
+  DBG_PRINTLN(F("Measure frequency for SCK, MOSI and MISO pin"));
   attachInterrupt(digitalPinToInterrupt(SCK_PIN), handleInterrupt_SCK, RISING);
   attachInterrupt(digitalPinToInterrupt(MOSI_PIN), handleInterrupt_MOSI, RISING);
   attachInterrupt(digitalPinToInterrupt(MISO_PIN), handleInterrupt_MISO, RISING);
@@ -44,102 +37,33 @@ void MeasureFrequency() {  // measure the frequency on the pins
   detachInterrupt(MOSI_PIN);
   detachInterrupt(MISO_PIN);
 
-  {
-#ifdef SERIAL_DEBUG
-    Serial.printf_P(PSTR("SCK frequency=%iHz (expected: >3000Hz) "), rising_edge_cnt.SCK);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf_P(PSTR("SCK frequency=%iHz (expected: >3000Hz) "), rising_edge_cnt.SCK);
-#endif
-  }
+  DBG_PRINTF_P(PSTR("SCK frequency=%iHz (expected: >3000Hz) "), rising_edge_cnt.SCK);
   if (rising_edge_cnt.SCK > 3000) {
-#ifdef SERIAL_DEBUG
-    Serial.println(F("o.k."));
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println(F("o.k."));
-#endif
+    DBG_PRINTLN(F("o.k."));
   } else {
-#ifdef SERIAL_DEBUG
-    Serial.println(F("out of range!"));
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println(F("out of range!"));
-#endif
+    DBG_PRINTLN(F("out of range!"));
   }
 
-  {
-#ifdef SERIAL_DEBUG
-    Serial.printf("MOSI frequency=%iHz (expected: <SCK frequency) ", rising_edge_cnt.MOSI);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("MOSI frequency=%iHz (expected: <SCK frequency) ", rising_edge_cnt.MOSI);
-#endif
-  }
+  DBG_PRINTF("MOSI frequency=%iHz (expected: <SCK frequency) ", rising_edge_cnt.MOSI);
   if ((rising_edge_cnt.MOSI > 30) & (rising_edge_cnt.MOSI < rising_edge_cnt.SCK)) {
-#ifdef SERIAL_DEBUG
-    Serial.println(F("o.k."));
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println(F("o.k."));
-#endif
+    DBG_PRINTLN(F("o.k."));
   } else {
-#ifdef SERIAL_DEBUG
-    Serial.println(F("out of range!"));
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println(F("out of range!"));
-#endif
+    DBG_PRINTLN(F("out of range!"));
   }
 
-  {
-#ifdef SERIAL_DEBUG
-    Serial.printf("MISO frequency=%iHz (expected: ~0Hz) ", rising_edge_cnt.MISO);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("MISO frequency=%iHz (expected: ~0Hz) ", rising_edge_cnt.MISO);
-#endif
-  }
+  DBG_PRINTF("MISO frequency=%iHz (expected: ~0Hz) ", rising_edge_cnt.MISO);
   if (rising_edge_cnt.MISO <= 10) {
-    {
-#ifdef SERIAL_DEBUG
-      Serial.println(F("o.k."));
-#endif
-#ifdef TELNET_DEBUG
-      Debug.println(F("o.k."));
-#endif
-    }
+    DBG_PRINTLN(F("o.k."));
   } else {
-    {
-#ifdef SERIAL_DEBUG
-      Serial.println(F("out of range!"));
-#endif
-#ifdef TELNET_DEBUG
-      Debug.println(F("out of range!"));
-#endif
-    }
+    DBG_PRINTLN(F("out of range!"));
     //    while (1);
   }
 }
 
 void printInfo() {
   char strtmp[50];
-  {
-#ifdef SERIAL_DEBUG
-    Serial.println(F(" connected"));
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println(F(" connected"));
-#endif
-  }
-  {
-#ifdef SERIAL_DEBUG
-    Serial.printf("MQTTclient.connected=%i\n", MQTTclient.connected());
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf("MQTTclient.connected=%i\n", MQTTclient.connected());
-#endif
-  }
+  DBG_PRINTLN(F(" connected"));
+  DBG_PRINTF("MQTTclient.connected=%i\n", MQTTclient.connected());
   output_P((ACStatus)type_status, PSTR(TOPIC_CONNECTED), PSTR(PAYLOAD_CONNECTED_TRUE));
   output_P((ACStatus)type_status, PSTR(TOPIC_VERSION), PSTR(VERSION));
   itoa(WiFi.RSSI(), strtmp, 10);
@@ -161,14 +85,7 @@ void publish_cmd_invalidparameter() {
 void output_P(const ACStatus status, PGM_P topic, PGM_P payload) {
   const int mqtt_topic_size = 100;
   char mqtt_topic[mqtt_topic_size];
-  {
-#ifdef SERIAL_DEBUG
-    Serial.printf_P(PSTR("output_P status=%i\n"), status);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf_P(PSTR("output_P status=%i\n"), status);
-#endif
-  }
+  DBG_PRINTF_P(PSTR("output_P status=%i\n"), status);
 
   if ((status & 0xc0) == type_status)
     strncpy_P(mqtt_topic, topic_prefix, mqtt_topic_size);
@@ -179,14 +96,7 @@ void output_P(const ACStatus status, PGM_P topic, PGM_P payload) {
   strncat_P(mqtt_topic, topic, mqtt_topic_size - strlen(mqtt_topic));
   // publish_P(char*) uses strnlen on a flash pointer: crashes on ESP8266
   bool b = MQTTclient.publish_P(mqtt_topic, (const uint8_t *)payload, strlen_P(payload), true);
-  {
-#ifdef SERIAL_DEBUG
-    Serial.printf_P(PSTR("publish :retour:%d status=%i topic=%s\n"), b, status, mqtt_topic);
-#endif
-#ifdef TELNET_DEBUG
-    Debug.printf_P(PSTR("publish :retour:%d status=%i topic=%s\n"), b, status, mqtt_topic);
-#endif
-  }
+  DBG_PRINTF_P(PSTR("publish :retour:%d status=%i topic=%s\n"), b, status, mqtt_topic);
 }
 
 #if TEMP_MEASURE_PERIOD > 0
@@ -230,47 +140,20 @@ byte getDs18x20Temperature(int temp_hysterese) {
     void printAddress(DeviceAddress deviceAddress) {
       for (uint8_t i = 0; i < 8; i++) {
         if (deviceAddress[i] < 16) {
-#ifdef SERIAL_DEBUG
-          Serial.print(F("0"));
-#endif
-#ifdef TELNET_DEBUG
-          Debug.print(F("0"));
-#endif
+          DBG_PRINT(F("0"));
         }
-        {
-#ifdef SERIAL_DEBUG
-          Serial.print(deviceAddress[i], HEX);
-#endif
-#ifdef TELNET_DEBUG
-          Debug.print(deviceAddress[i], HEX);
-#endif
-        }
+        DBG_PRINT(deviceAddress[i], HEX);
       }
     }
 
 
     void setup_ds18x20() {
       sensors.begin();
-      {
-#ifdef SERIAL_DEBUG
-        Serial.printf_P(PSTR("Found %i DS18xxx family devices.\n"), sensors.getDS18Count());
-#endif
-        Debug.printf_P(PSTR("Found %i DS18xxx family devices.\n"), sensors.getDS18Count());
-      }
+      DBG_PRINTF_P(PSTR("Found %i DS18xxx family devices.\n"), sensors.getDS18Count());
       if (!sensors.getAddress(insideThermometer, 0)) {
-#ifdef SERIAL_DEBUG
-        Serial.println(F("Unable to find address for Device 0"));
-#endif
-#ifdef TELNET_DEBUG
-        Debug.println(F("Unable to find address for Device 0"));
-#endif
+        DBG_PRINTLN(F("Unable to find address for Device 0"));
       } else {
-#ifdef SERIAL_DEBUG
-        Serial.printf_P(PSTR("Device 0 Address: 0x%02x\n"), insideThermometer);
-#endif
-#ifdef TELNET_DEBUG
-        Debug.printf_P(PSTR("Device 0 Address: 0x%02x\n"), insideThermometer);
-#endif
+        DBG_PRINTF_P(PSTR("Device 0 Address: 0x%02x\n"), insideThermometer);
       }
       sensors.setResolution(insideThermometer, 9);  // set the resolution to 9 bit
       sensors.setWaitForConversion(false);

@@ -76,12 +76,7 @@ static bool wifiRecoveryPortalActive = false;
 
 //Callback notifying us of the need to save WiFiManager config to FS
 void saveConfigCallback() {
-#ifdef SERIAL_DEBUG
-  Serial.println("Should save config");
-#endif
-#ifdef TELNET_DEBUG
-  Debug.println("Should save config");
-#endif
+  DBG_PRINTLN("Should save config");
   shouldSaveConfig = true;
 }
 
@@ -340,40 +335,20 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LED_LOW);
   //Read configuration from FS json
-#ifdef SERIAL_DEBUG
-  Serial.println("Mounting FS...");
-#endif
-#ifdef TELNET_DEBUG
-  Debug.println("Mounting FS...");
-#endif
+  DBG_PRINTLN("Mounting FS...");
   bool formatFlag=true;
   if (LittleFS.begin()) {
-#ifdef SERIAL_DEBUG
-    Serial.println("Mounted file system");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("Mounted file system");
-#endif
+    DBG_PRINTLN("Mounted file system");
 
     if (LittleFS.exists("/config.json")) 
     {
       //File exists, reading and loading
-#ifdef SERIAL_DEBUG
-      Serial.println("Reading config file");
-#endif
-#ifdef TELNET_DEBUG
-      Debug.println("Reading config file");
-#endif
+      DBG_PRINTLN("Reading config file");
       File configFile = LittleFS.open("/config.json", "r");
 
       if (configFile) {
         size_t size = configFile.size();
-#ifdef SERIAL_DEBUG
-        Serial.printf("Opened config file, size:%d\n",size);
-#endif
-#ifdef TELNET_DEBUG
-        Debug.printf("Opened config file, size:%d\n",size);
-#endif
+        DBG_PRINTF("Opened config file, size:%d\n",size);
 
         bool error;
         DynamicJsonDocument json(size*2);
@@ -394,12 +369,7 @@ void setup() {
         serializeJson(json, Serial);
 #endif
 
-#ifdef SERIAL_DEBUG
-          Serial.println("\nParsed json");
-#endif
-#ifdef TELNET_DEBUG
-          Debug.println("\nParsed json");
-#endif
+          DBG_PRINTLN("\nParsed json");
           if (!json.containsKey("PreloadSSID") || !json.containsKey("PreloadPSW") || !json.containsKey("PreloadFlag") || !json.containsKey("staticIP") || !json.containsKey("masqueIP") || !json.containsKey("gatewayIP") || !json.containsKey("dnsIP") ||
               !json.containsKey("mqtt_server") || !json.containsKey("mqtt_port") || !json.containsKey("mqtt_user") || !json.containsKey("mqtt_pass") ||  !json.containsKey("wifiTimeout") || !json.containsKey("Room") || !json.containsKey("Thing"))
           {
@@ -431,24 +401,14 @@ void setup() {
         } 
         else 
         {
-#ifdef SERIAL_DEBUG
-          Serial.println("Failed to load json config");
-#endif
-#ifdef TELNET_DEBUG
-          Debug.println("Failed to load json config");
-#endif
+          DBG_PRINTLN("Failed to load json config");
         }
       }
     }
   } 
   else 
   {
-#ifdef SERIAL_DEBUG
-    Serial.println("Failed to mount FS");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("Failed to mount FS");
-#endif
+    DBG_PRINTLN("Failed to mount FS");
   }
 #ifdef SERIAL_DEBUG
   Serial.printf("Opened config file 3:\n");
@@ -478,12 +438,7 @@ void setup() {
 
   //Optional: Set static ip
   // wifiManager.setSTAStaticIPConfig(IPAddress(0,0,0,0), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
-#ifdef SERIAL_DEBUG
-  Serial.printf("staticIP:%s, masqueIP:%s, gatewayIP:%s, dnsIP:%s\n", config.staticIP, config.masqueIP, config.gatewayIP, config.dnsIP);
-#endif
-#ifdef TELNET_DEBUG
-  Debug.printf("staticIP:%s, masqueIP:%s, gatewayIP:%s, dnsIP:%s\n", config.staticIP, config.masqueIP, config.gatewayIP, config.dnsIP);
-#endif
+  DBG_PRINTF("staticIP:%s, masqueIP:%s, gatewayIP:%s, dnsIP:%s\n", config.staticIP, config.masqueIP, config.gatewayIP, config.dnsIP);
 
   if (strcmp(config.staticIP, "0.0.0.0") && strcmp(config.masqueIP, "0.0.0.0") && strcmp(config.gatewayIP, "0.0.0.0") && strcmp(config.dnsIP, "0.0.0.0")) {
     IPAddress ip, mask, gate, dns;
@@ -542,12 +497,7 @@ void setup() {
   bool wifiConnected = wifiManager.autoConnect(configSSID, configPW);
   wifiManager.setEnableConfigPortal(true);
   if (!wifiConnected) {
-#ifdef SERIAL_DEBUG
-    Serial.println("WiFi unavailable; retrying in background");
-#endif
-#ifdef TELNET_DEBUG
-    Debug.println("WiFi unavailable; retrying in background");
-#endif
+    DBG_PRINTLN("WiFi unavailable; retrying in background");
   }
   saveJson(false);
 #ifdef SERIAL_DEBUG
@@ -591,12 +541,7 @@ void setup() {
   }
 
   //Debug resulting topics to serial
-#ifdef SERIAL_DEBUG
-  Serial.println("Constructed topics:MQTT_SET_PREFIX,MQTT_OP_PREFIX,MQTT_ERR_OP_PREFIX\n");
-#endif
-#ifdef TELNET_DEBUG
-  Debug.println("Constructed topics:MQTT_SET_PREFIX,MQTT_OP_PREFIX,MQTT_ERR_OP_PREFIX\n");
-#endif
+  DBG_PRINTLN("Constructed topics:MQTT_SET_PREFIX,MQTT_OP_PREFIX,MQTT_ERR_OP_PREFIX\n");
 
 
   //Save the custom parameters to FS
@@ -605,12 +550,7 @@ void setup() {
     ESP.restart();
   }
 
-#ifdef SERIAL_DEBUG
-  Serial.printf("\nLocal IP adres:%s\n",WiFi.localIP().toString().c_str());
-#endif
-#ifdef TELNET_DEBUG
-  Debug.printf("\nLocal IP adres:%s\n",WiFi.localIP().toString().c_str());
-#endif
+  DBG_PRINTF("\nLocal IP adres:%s\n",WiFi.localIP().toString().c_str());
 
   {  //Connect to MQTT broker and set callback
     MQTTclient.setServer(config.mqtt_server, atoi(config.mqtt_port));
