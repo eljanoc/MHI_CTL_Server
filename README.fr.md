@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.37-trace)
+# MHI-AC-CtrlServer (V4.38-trace)
 
 [English](README.md) | **Français**
 
@@ -139,6 +139,9 @@ Les tests tournent sur PC, sans carte : `g++ -I. test/test_params.cpp -o test_pa
 
 ## Versions
 Les versions sont gérées avec des tags Git, par exemple `v4.25-trace`.
+
+### V4.38
+Refactorisation interne : les variables d'état de `loop.cpp` (état MQTT, compteurs de connexion, chronométrage de la boucle, commandes web, date de reboot) sont regroupées dans quatre structures définies dans `app_state.h` (`web`, `net`, `loopState`, `app`). Corrigé : la trace Telnet n'avait pas de `%s` pour l'IP et affichait un nombre de déconnexions faux. Aucun changement de comportement.
 
 ### V4.37
 Corrigé : sur une flash totalement effacée, les paramètres saisis dans le portail Wi-Fi (IP fixe, masque, passerelle, DNS, MQTT...) étaient perdus au premier redémarrage, car le système de fichiers fraîchement formaté n'était pas monté avant l'écriture de `config.json`. Toutes les variables de configuration sont regroupées dans une structure `mhi::Config config` (`params_logic.h`).
