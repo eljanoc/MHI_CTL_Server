@@ -79,7 +79,6 @@ bool verifAuthor() {  // If a POST request is made to URI /login
   }
 }
 
-extern int stateFlag;
 /********************************** Core 0 ***********************************/
 char *getWebValuesString(char *, size_t);
 char *getParametersString(char *, size_t);
@@ -94,22 +93,22 @@ static void webServerTaskSetup() {
   webServer.on("/NewParam", newParams);
 
   webServer.on("/restart", []() {
-    stateFlag=GO_RESTART;;
+    app.stateFlag=GO_RESTART;;
     webServer.send(200, "text/html", "restarting...");
   });
 
   webServer.on("/change", []() {
-    stateFlag=GO_CHANGE;
+    app.stateFlag=GO_CHANGE;
     webServer.send(200, "text/plain", "changing...");
   });
 
   webServer.on("/wifimanager", []() {
-    stateFlag=GO_WIFIMANAGER;
+    app.stateFlag=GO_WIFIMANAGER;
     webServer.send(200, "text/plain", "starting WiFi Manager...");
   });
 
   webServer.on("/reinit", []() {
-    stateFlag=GO_REINIT;
+    app.stateFlag=GO_REINIT;
     webServer.send_P(200, "text/html", "ok");
   });
 

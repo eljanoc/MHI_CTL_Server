@@ -34,15 +34,10 @@ extern String savedWiFiSSID;
 extern String savedWiFiPass;
 void startWifiRecoveryPortal();
 void handleWifiRecoveryPortal();
-char webPuissance[6]="";
-char webIpSalon[40]="";
-char webIpChNO[40]="";
-char webIpCuisine[40]="";
-
-struct tm tReboot;
-bool debugit = false;  //Send some info (eg. MHI SPI bit field updates and errors) to debug topic
-bool modeInfo = false;
-int connectionFails = 0;  //Count number of failed MQTT connection attempts for restart
+mhi::WebValues web;
+mhi::NetStats net;
+mhi::LoopState loopState;
+mhi::AppControl app;
 
 void startConfigPortal();
 
@@ -56,14 +51,13 @@ void WiFiDisconnectAndRestart() {
   ESP.restart();
   delay(1000);
 }
-int stateFlag=0;
 
 void saveJson (bool);
 void stateTest(){
-  if (!stateFlag)
+  if (!app.stateFlag)
     return;
-  int state=stateFlag;
-  stateFlag=0;
+  int state=app.stateFlag;
+  app.stateFlag=0;
   switch (state)
   {
     case GO_REINIT:{
@@ -110,36 +104,34 @@ void stateTest(){
 void MQTT_subscribe_callback(const char *topic, byte *payload, unsigned int length);
 
 template<typename Generic> void debug2mqtt(Generic text) {
-  if (debugit) {
+  if (app.debugit) {
     MQTTclient.publish(debug, text, false);
   }
 }
 
 
-int nbDeconnect = 0;
-int myConnexionCount = 0;
 void sendConnexion2mqtt(bool start) {
   char msg[300];
   time_t rawtime = timeClient.getEpochTime();
   struct tm *tcur = localtime(&rawtime);
-  if (tReboot.tm_year == 0)
-    tReboot = *tcur;
+  if (app.tReboot.tm_year == 0)
+    app.tReboot = *tcur;
 
   String ip = WiFi.localIP().toString();
   snprintf(msg, sizeof(msg), "%s num:%d,%dh:%02d  %d/%d/%d, last reboot:%dh:%02d  %d/%d/%d\n SSID:%s, ip:%s, MQTT:%s:%s, deconnect:%d\n",
-          config.Thing, myConnexionCount++,
+          config.Thing, net.connectionCount++,
           tcur->tm_hour,    /* Hours.   [0-23]      */
           tcur->tm_min,     /* Minutes. [0-59]      */
           tcur->tm_mday,    /* Day.     [1-31]      */
           tcur->tm_mon + 1, /* Month.   [0-11]      */
           tcur->tm_year + 1900,
 
-          tReboot.tm_hour,    /* Hours.   [0-23]      */
-          tReboot.tm_min,     /* Minutes. [0-59]      */
-          tReboot.tm_mday,    /* Day.     [1-31]      */
-          tReboot.tm_mon + 1, /* Month.   [0-11]      */
-          tReboot.tm_year + 1900,
-          savedWiFiSSID.c_str(), ip.c_str(), config.mqtt_server, config.mqtt_port, nbDeconnect);
+          app.tReboot.tm_hour,    /* Hours.   [0-23]      */
+          app.tReboot.tm_min,     /* Minutes. [0-59]      */
+          app.tReboot.tm_mday,    /* Day.     [1-31]      */
+          app.tReboot.tm_mon + 1, /* Month.   [0-11]      */
+          app.tReboot.tm_year + 1900,
+          savedWiFiSSID.c_str(), ip.c_str(), config.mqtt_server, config.mqtt_port, net.nbDeconnect);
 #ifdef SERIAL_DEBUG
   Serial.printf("publish topic:%s\npayload:%s\n", debug, msg);
 #endif
@@ -149,8 +141,6 @@ void sendConnexion2mqtt(bool start) {
 #endif
 }
 
-long unsigned int lastDiscMillis = 0;
-long unsigned int lastPrintMillis = 0;
 extern void startWebPortal();
 
 void setWiFi() {
@@ -174,7 +164,7 @@ void setWiFi() {
     disconnected = true;
     disconnectedAt = now;
     attemptedConnection = false;
-    ++nbDeconnect;
+    ++net.nbDeconnect;
   }
 
   if (savedWiFiSSID.length() > 0 &&
@@ -192,7 +182,6 @@ void setWiFi() {
 }
 
 void printInfo();
-char MQTTconnectedFlag[4];
 
 void connect() {
   // Loop until we're (re)connected
@@ -207,7 +196,7 @@ void connect() {
     if (!WiFi.isConnected())
       setWiFi();
     if (!WiFi.isConnected()) {
-      strcpy(MQTTconnectedFlag, "no");
+      strcpy(web.mqttState, "no");
       return;
     }
 
@@ -265,8 +254,8 @@ void connect() {
 
       printInfo();
       sendConnexion2mqtt(true);
-      strcpy(MQTTconnectedFlag,"yes");
-      connectionFails = 0;
+      strcpy(web.mqttState,"yes");
+      net.connectionFails = 0;
     } 
     else 
     {
@@ -289,13 +278,13 @@ void connect() {
       Debug.print("Failed connection attempts: ");
 #endif
 #ifdef SERIAL_DEBUG
-      Serial.println(connectionFails);
+      Serial.println(net.connectionFails);
 #endif
 #ifdef TELNET_DEBUG
-      Debug.println(connectionFails);
+      Debug.println(net.connectionFails);
 #endif
 
-      if (++connectionFails == 30) {
+      if (++net.connectionFails == 30) {
 #ifdef SERIAL_DEBUG
         Serial.println("MQTT broker connection timeout...restarting!");
 #endif
@@ -310,7 +299,7 @@ void connect() {
 #ifdef TELNET_DEBUG
       Debug.println("Try again in 5 seconds...");
 #endif
-      strcpy(MQTTconnectedFlag,"no");
+      strcpy(web.mqttState,"no");
     }
   }
 }
@@ -324,26 +313,23 @@ static void loopWebServer(void){}
 void listNetworks();
 
 void loopMHI();
-int mycount = 0;
-unsigned long int tWait=60000;
-unsigned long int lastTimeUpdateMillis=0,lastTimeServerMillis=0,lastTimeMQTTMillis=0;
-unsigned long int timeLoop,minLoop=100000,maxLoop=0,moyLoop=0,nbLoop=0;
 void loop() {
+  mhi::LoopState& ls = loopState;
   unsigned long curMillis = millis();
-  if (mycount>10)
+  if (ls.warmupCount>10)
   {
-    timeLoop=curMillis-timeLoop;
-    if (timeLoop){
-      if (timeLoop>maxLoop)
-        maxLoop=timeLoop;
-      if (timeLoop<minLoop)
-        minLoop=timeLoop;
-      moyLoop+=timeLoop;
+    ls.timeLoop=curMillis-ls.timeLoop;
+    if (ls.timeLoop){
+      if (ls.timeLoop>ls.maxLoop)
+        ls.maxLoop=ls.timeLoop;
+      if (ls.timeLoop<ls.minLoop)
+        ls.minLoop=ls.timeLoop;
+      ls.moyLoop+=ls.timeLoop;
     }
   }  
   else
-    mycount++;
-  timeLoop=curMillis;
+    ls.warmupCount++;
+  ls.timeLoop=curMillis;
 
   ArduinoOTA.handle();  //Handle Arduino OTA updates
 #ifdef TELNET_DEBUG
@@ -354,8 +340,8 @@ void loop() {
   setWiFi();
   handleWifiRecoveryPortal();
 
-  if ((curMillis - lastTimeUpdateMillis) > tWait) {
-    lastTimeUpdateMillis = curMillis;
+  if ((curMillis - ls.lastUpdateMillis) > ls.tWait) {
+    ls.lastUpdateMillis = curMillis;
     unsigned long beforeTimeMillis = millis();
 #ifdef TELNET_DEBUG
     Debug.printf("Before NTPClient.update\n");
@@ -363,39 +349,38 @@ void loop() {
     bool b = timeClient.update();
     unsigned long int tmp = millis() - beforeTimeMillis;
     if (b)
-      tWait = 600000;
+      ls.tWait = 600000;
     else
-      tWait = 60000;
+      ls.tWait = 60000;
 #ifdef TELNET_DEBUG
     Debug.printf("Update NTP:%d, durée NTPClient: %dms\n", b, tmp);
 #endif
   }
 
   // Date de reboot fixée dès que l'heure NTP est connue, indépendamment de MQTT
-  if (tReboot.tm_year == 0 && timeClient.isTimeSet()) {
+  if (app.tReboot.tm_year == 0 && timeClient.isTimeSet()) {
     time_t rawtime = timeClient.getEpochTime();
-    tReboot = *localtime(&rawtime);
+    app.tReboot = *localtime(&rawtime);
   }
 
-  if (nbLoop&&(curMillis - lastPrintMillis) > 10000) {
+  if (ls.nbLoop&&(curMillis - ls.lastPrintMillis) > 10000) {
     int core = 1;
 #ifdef MULTICORE
     esp_task_wdt_reset();  //Reset du Watchdog toutes  les 10s
     core = xPortGetCoreID();
 #endif
-    lastPrintMillis = curMillis;
-    moyLoop/=nbLoop;
+    ls.lastPrintMillis = curMillis;
+    ls.moyLoop/=ls.nbLoop;
 #ifdef SERIAL_DEBUG
     Serial.printf("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP:%s, Deconnexions:%d\n",
-                core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), nbDeconnect);
+                core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), net.nbDeconnect);
 #endif
 #ifdef TELNET_DEBUG
     Debug.printf("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP,  Deconnexions:%d\n", 
-                core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), nbDeconnect);
+                core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), net.nbDeconnect);
 #endif
-    nbLoop=0;
-    minLoop=100000;
-    nbLoop=maxLoop=moyLoop=nbLoop=0;
+    ls.minLoop=100000;
+    ls.nbLoop=ls.maxLoop=ls.moyLoop=0;
   }
 
   loopWebServer();
@@ -404,8 +389,8 @@ void loop() {
   static bool mqttReconnectAttempted = false;
   // MQTT désactivé (case décochée), serveur vide ou 0.0.0.0 : mode autonome, aucune tentative ni redémarrage
   bool mqttDisabled = mhi::mqttDisabled(config.mqtt_enabled, config.mqtt_server);
-  if (mqttDisabled && strcmp(MQTTconnectedFlag, "off") != 0)
-    strcpy(MQTTconnectedFlag, "off");
+  if (mqttDisabled && strcmp(web.mqttState, "off") != 0)
+    strcpy(web.mqttState, "off");
   if (!mqttDisabled && !MQTTclient.connected() &&
       (!mqttReconnectAttempted || curMillis - lastMQTTReconnectMillis >= 5000)) {
 #ifdef SERIAL_DEBUG
@@ -418,14 +403,14 @@ void loop() {
     lastMQTTReconnectMillis = curMillis;
     connect();  //Connect first time. Reconnect when connection lost.
   }
-  if ((curMillis - lastTimeMQTTMillis) > 100) {
-    lastTimeMQTTMillis = curMillis;
+  if ((curMillis - ls.lastMQTTMillis) > 100) {
+    ls.lastMQTTMillis = curMillis;
     MQTTclient.loop();
   }
   loopMHI();
 
   stateTest();
-  nbLoop++;
+  ls.nbLoop++;
 }
 
 
@@ -450,51 +435,51 @@ void TopicService(unsigned char *payload, unsigned int length) {
   }
 
   if (char *value=strstr((const char *)payload, "puissance=")) {
-    snprintf(webPuissance, sizeof(webPuissance), "%sW", value+strlen("puissance="));
+    snprintf(web.puissance, sizeof(web.puissance), "%sW", value+strlen("puissance="));
 #ifdef SERIAL_DEBUG
-    Serial.printf("webPuissance=%s\n",webPuissance);
+    Serial.printf("webPuissance=%s\n",web.puissance);
 #endif
 #ifdef TELNET_DEBUG
-    Debug.printf("webPuissance=%s\n",webPuissance);
+    Debug.printf("webPuissance=%s\n",web.puissance);
 #endif
     return;
   }
 
   if (strstr((const char *)payload, "ipSalon:\"")) {
-    COPY_STR(webIpSalon,(const char *)&payload[strlen("ipSalon:\"")]);
-    if (webIpSalon[0])
-      webIpSalon[strlen(webIpSalon)-1]=0;
+    COPY_STR(web.ipSalon,(const char *)&payload[strlen("ipSalon:\"")]);
+    if (web.ipSalon[0])
+      web.ipSalon[strlen(web.ipSalon)-1]=0;
 #ifdef SERIAL_DEBUG
-    Serial.printf("webIpSalon:%s\n",webIpSalon);
+    Serial.printf("webIpSalon:%s\n",web.ipSalon);
 #endif
 #ifdef TELNET_DEBUG
-    Debug.printf("webIpSalon:%s\n",webIpSalon);
+    Debug.printf("webIpSalon:%s\n",web.ipSalon);
 #endif
     return;
   }
 
   if (strstr((const char *)payload, "ipChNO:\"")) {
-    COPY_STR(webIpChNO,(const char *)&payload[strlen("ipChNO:\"")]);
-    if (webIpChNO[0])
-      webIpChNO[strlen(webIpChNO)-1]=0;
+    COPY_STR(web.ipChNO,(const char *)&payload[strlen("ipChNO:\"")]);
+    if (web.ipChNO[0])
+      web.ipChNO[strlen(web.ipChNO)-1]=0;
 #ifdef SERIAL_DEBUG
-    Serial.printf("webIpChNO:%s\n",webIpChNO);
+    Serial.printf("webIpChNO:%s\n",web.ipChNO);
 #endif
 #ifdef TELNET_DEBUG
-    Debug.printf("webIpChNO:%s\n",webIpChNO);
+    Debug.printf("webIpChNO:%s\n",web.ipChNO);
 #endif
     return;
   }
 
   if (strstr((const char *)payload, "ipCuisine:\"")) {
-    COPY_STR(webIpCuisine,(const char *)&payload[strlen("ipCuisine:\"")]);
-    if (webIpCuisine[0])
-      webIpCuisine[strlen(webIpCuisine)-1]=0;
+    COPY_STR(web.ipCuisine,(const char *)&payload[strlen("ipCuisine:\"")]);
+    if (web.ipCuisine[0])
+      web.ipCuisine[strlen(web.ipCuisine)-1]=0;
 #ifdef SERIAL_DEBUG
-    Serial.printf("webIpCuisine:%s\n",webIpCuisine);
+    Serial.printf("webIpCuisine:%s\n",web.ipCuisine);
 #endif
 #ifdef TELNET_DEBUG
-    Debug.printf("webIpCuisine:%s\n",webIpCuisine);
+    Debug.printf("webIpCuisine:%s\n",web.ipCuisine);
 #endif
     return;
   }
@@ -566,7 +551,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
     Debug.println("debugon");
 #endif
     MQTTclient.publish(debug, " << Debug ON >>", false);
-    debugit = true;
+    app.debugit = true;
     return;
   }
 
@@ -603,7 +588,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
     Debug.println("debugoff");
 #endif
     MQTTclient.publish(debug, " << Debug OFF >>", false);
-    debugit = false;
+    app.debugit = false;
     return;
   }
 
@@ -622,7 +607,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
 #endif
 
     MQTTclient.publish(debug, "Info On", false);
-    modeInfo = true;
+    app.modeInfo = true;
     return;
   }
 
@@ -634,7 +619,7 @@ void TopicService(unsigned char *payload, unsigned int length) {
     Debug.printf("infOff\n");
 #endif
     MQTTclient.publish(debug, "Info Off", false);
-    modeInfo = false;
+    app.modeInfo = false;
     return;
   }
   MQTTclient.publish(debug, " << Unknown service command >>", false);

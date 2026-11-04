@@ -58,7 +58,6 @@ bool verifAuthor(AsyncWebServerRequest *request) {  // If a POST request is made
   }
 }
 
-extern int stateFlag;
 extern char *getWebValuesString();
 /********************************** Core 0 ***********************************/
 static void webServerTaskSetup() {
@@ -69,17 +68,17 @@ static void webServerTaskSetup() {
 #endif
 
   webServer.on("/restart", [](AsyncWebServerRequest *request) {
-    stateFlag=GO_RESTART;
+    app.stateFlag=GO_RESTART;
     request->send(200, "text/html", "restarting...");
   });
 
   webServer.on("/wifimanager", [](AsyncWebServerRequest *request) {
-    stateFlag=GO_WIFIMANAGER;
+    app.stateFlag=GO_WIFIMANAGER;
     request->send(200, "text/html", "Go WiFiManager...");
   });
 
   webServer.on("/reinit", [](AsyncWebServerRequest *request) {
-    stateFlag=GO_REINIT;;
+    app.stateFlag=GO_REINIT;;
     request->send_P(200, "text/html", "Go Reinit...");
   });
 

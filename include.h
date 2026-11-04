@@ -39,8 +39,13 @@
 #define GO_CHANGE 4
 
 #include "params_logic.h"
+#include "app_state.h"
 
 extern mhi::Config config;  // Définie dans setup.cpp
+extern mhi::WebValues web;
+extern mhi::NetStats net;
+extern mhi::LoopState loopState;
+extern mhi::AppControl app;  // Définies dans loop.cpp
 
 // Copie bornée vers un tableau de char (tronque au lieu de déborder)
 #define COPY_STR(dst, src) strlcpy((dst), (src), sizeof(dst))
