@@ -376,7 +376,7 @@ void loop() {
                 core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), net.nbDeconnect);
 #endif
 #ifdef TELNET_DEBUG
-    Debug.printf("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP,  Deconnexions:%d\n", 
+    Debug.printf("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP:%s,  Deconnexions:%d\n", 
                 core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), net.nbDeconnect);
 #endif
     ls.minLoop=100000;
