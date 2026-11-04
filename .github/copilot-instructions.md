@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.38-trace)
+# MHI-AC-CtrlServer (V4.39-trace)
 
 Firmware ESP8266 / ESP32 pour piloter une climatisation Mitsubishi Heavy (SPI) via MQTT et interface web.
 Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branches/tags), pas avec des copies de dossier.
@@ -17,7 +17,7 @@ Dossier de travail unique : ce dossier. Les versions se gèrent avec Git (branch
 - ESP8266 : carte `esp8266:esp8266:d1_mini`. OTA via la tâche VS Code « OTA ESP8266 141 » (`.vscode\tasks.json`, IP 192.168.0.141, build dans `%TEMP%\MHI-ota-8266\build`).
 - ESP32 : carte `esp32:esp32:esp32doit-devkit-v1` (la carte générique `esp32` échoue : `LED_BUILTIN` absent). Build dans `%TEMP%\MHI-ota-32\build` (core 3.3.12 ; la première compilation après un changement de core prend plus de 5 min, laisser tourner en arrière-plan). Téléversement USB sur COM6 (CH9102) : utiliser `UploadSpeed=115200` (921600 échoue).
 - OTA ESP32 : `arduino-cli upload --protocol network` coupe la connexion (WinError 10053) ; utiliser `espota.exe` directement avec un port local fixe, via les tâches « OTA ESP32 143 » / « OTA ESP32 152 » : `-i <IP> -p 3232 -P 41234 -a climatiseur -t 20 -f ...\MHI-AC-CtrlServer.ino.bin`. Compiler avant de lancer la tâche.
-- Binaires produits dans `bin\` (ignorés par Git) : `MHI8266-V4.38.bin`, `MHI32-V4.38.bin`, `MHI32-V4.38-merged.bin`.
+- Binaires produits dans `bin\` (ignorés par Git) : `MHI8266-V4.39.bin`, `MHI32-V4.39.bin`, `MHI32-V4.39-merged.bin`.
 
 ## Historique / décisions
 - WiFiManager 2.0.17 modifiée pour ESP8266 uniquement : correction dans `getMenuOut()` (cast `__FlashStringHelper`), évite un bouclage au démarrage environ une minute après le boot. Voir README. Garder la correction dans `libs/WiFiManager` et `Documents\Arduino\libraries\WiFiManager`; elle répond au problème observé sur ESP8266, pas à un problème ESP32.

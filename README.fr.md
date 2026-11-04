@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.38-trace)
+# MHI-AC-CtrlServer (V4.39-trace)
 
 [English](README.md) | **Français**
 
@@ -139,6 +139,9 @@ Les tests tournent sur PC, sans carte : `g++ -I. test/test_params.cpp -o test_pa
 
 ## Versions
 Les versions sont gérées avec des tags Git, par exemple `v4.25-trace`.
+
+### V4.39
+`/NewParam` répond maintenant 500 au lieu de redémarrer en silence quand `config.json` ne peut pas être écrit entièrement (`saveJson()` renvoie un statut). Les traces de debug passent par les macros `DBG_PRINT*` de `include.h` au lieu de blocs `#ifdef SERIAL_DEBUG` / `#ifdef TELNET_DEBUG` dupliqués. Aucun autre changement de comportement.
 
 ### V4.38
 Refactorisation interne : les variables d'état de `loop.cpp` (état MQTT, compteurs de connexion, chronométrage de la boucle, commandes web, date de reboot) sont regroupées dans quatre structures définies dans `app_state.h` (`web`, `net`, `loopState`, `app`). Corrigé : la trace Telnet n'avait pas de `%s` pour l'IP et affichait un nombre de déconnexions faux. Aucun changement de comportement.
