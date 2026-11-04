@@ -12,7 +12,7 @@ char mqtt_port[9] = "1883";
 char mqtt_enabled[2] = "1";  //"1" = MQTT actif, "0" = désactivé (mode autonome)
 char mqtt_user[20] = "";
 char mqtt_pass[20] = "";
-char wifiTimeout[3] = "5";  //Timeout in minutes (max. 99) before WiFi configuration portal is turned off and the ESP tries to connect again to the previously configured AP (if any)
+char wifiTimeout[3] = "2";  //Minutes without WiFi before the recovery access point opens
 char Room[20] = "Aircon";
 char Thing[20] = "RoomName";
 char PreloadSSID[20]="";
@@ -40,6 +40,7 @@ NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200);  //pool.ntp.org");
 
 #if defined(WEB_SERVER) || defined (AS_WEB_SERVER)
 void loadWebServer ();
+void setApplicationWebServerEnabled(bool enabled);
 #endif
 
 void MQTT_subscribe_callback(const char *topic, byte *payload, unsigned int length);
@@ -49,6 +50,43 @@ extern void setupTime();
 
 //Flag for saving data
 bool shouldSaveConfig = false;
+
+struct WifiPortal {
+  WiFiManager manager;
+  WiFiManagerParameter staticIPParameter;
+  WiFiManagerParameter masqueIPParameter;
+  WiFiManagerParameter gatewayIPParameter;
+  WiFiManagerParameter dnsIPParameter;
+  WiFiManagerParameter mqttServerParameter;
+  WiFiManagerParameter mqttPortParameter;
+  WiFiManagerParameter mqttUserParameter;
+  WiFiManagerParameter mqttPassParameter;
+  WiFiManagerParameter wifiTimeoutParameter;
+  WiFiManagerParameter roomParameter;
+  WiFiManagerParameter thingParameter;
+
+  WifiPortal()
+      : staticIPParameter("staticIP", "Static IP", staticIP, 16),
+        masqueIPParameter("masqueIP", "Masque IP", masqueIP, 16),
+        gatewayIPParameter("gatewayIP", "Gateway IP", gatewayIP, 16),
+        dnsIPParameter("dnsIP", "DNS IP", dnsIP, 16),
+        mqttServerParameter("webServer", "MQTT Server", mqtt_server, 16),
+        mqttPortParameter("port", "MQTT Port", mqtt_port, 9),
+        mqttUserParameter("user", "MQTT Username", mqtt_user, 20),
+        mqttPassParameter("pass", "MQTT Password", mqtt_pass, 20),
+        wifiTimeoutParameter("timeout", "WiFi recovery delay (min)", wifiTimeout, 3),
+        roomParameter("Room", "Room name", Room, 20),
+        thingParameter("Thing", "Thing name", Thing, 20) {}
+};
+
+static WifiPortal& getWifiPortal() {
+  static WifiPortal portal;
+  return portal;
+}
+
+void startWifiRecoveryPortal();
+void handleWifiRecoveryPortal();
+static bool wifiRecoveryPortalActive = false;
 
 //Callback notifying us of the need to save WiFiManager config to FS
 void saveConfigCallback() {
@@ -170,6 +208,69 @@ void saveJson (bool f){
   serializeJson(json,configFile);
   configFile.close();
     //end save
+}
+
+static void applyWifiPortalParameters() {
+  WifiPortal& portal = getWifiPortal();
+  COPY_STR(staticIP, portal.staticIPParameter.getValue());
+  COPY_STR(masqueIP, portal.masqueIPParameter.getValue());
+  COPY_STR(gatewayIP, portal.gatewayIPParameter.getValue());
+  COPY_STR(dnsIP, portal.dnsIPParameter.getValue());
+  COPY_STR(mqtt_server, portal.mqttServerParameter.getValue());
+  COPY_STR(mqtt_port, portal.mqttPortParameter.getValue());
+  COPY_STR(mqtt_user, portal.mqttUserParameter.getValue());
+  COPY_STR(mqtt_pass, portal.mqttPassParameter.getValue());
+  COPY_STR(wifiTimeout, portal.wifiTimeoutParameter.getValue());
+  COPY_STR(Room, portal.roomParameter.getValue());
+  COPY_STR(Thing, portal.thingParameter.getValue());
+}
+
+void startWifiRecoveryPortal() {
+  if (wifiRecoveryPortalActive)
+    return;
+
+  WifiPortal& portal = getWifiPortal();
+  portal.manager.setDisableSTAConn(false);
+  portal.manager.setConfigPortalBlocking(false);
+  portal.manager.setConfigPortalTimeout(0);
+#if defined(WEB_SERVER) || defined(AS_WEB_SERVER)
+  setApplicationWebServerEnabled(false);
+#endif
+  portal.manager.startConfigPortal(configSSID, configPW);
+  if (!portal.manager.getConfigPortalActive()) {
+#if defined(WEB_SERVER) || defined(AS_WEB_SERVER)
+    setApplicationWebServerEnabled(true);
+#endif
+    Serial.println("Unable to start WiFi recovery portal");
+    return;
+  }
+  wifiRecoveryPortalActive = true;
+}
+
+void handleWifiRecoveryPortal() {
+  if (!wifiRecoveryPortalActive)
+    return;
+
+  WifiPortal& portal = getWifiPortal();
+  portal.manager.process();
+
+  if (WiFi.isConnected() && shouldSaveConfig) {
+    applyWifiPortalParameters();
+    saveJson(false);
+    ESP.restart();
+    return;
+  }
+
+  if (!WiFi.isConnected() && portal.manager.getConfigPortalActive())
+    return;
+
+  portal.manager.stopConfigPortal();
+  wifiRecoveryPortalActive = false;
+  WiFi.softAPdisconnect(true);
+  WiFi.mode(WIFI_STA);
+#if defined(WEB_SERVER) || defined(AS_WEB_SERVER)
+  setApplicationWebServerEnabled(true);
+#endif
 }
 
 #ifdef ESP32
@@ -386,25 +487,8 @@ void setup() {
     LittleFS.format();
   }
 
-  //The extra parameters to be configured (can be either global or just in the setup)
-  //After connecting, parameter.getValue() will get you the configured value
-  //id/name placeholder/prompt default length
-  WiFiManagerParameter custom_staticIP("staticIP", "Static IP", staticIP, 16);
-  WiFiManagerParameter custom_masqueIP("masqueIP", "Masque IP", masqueIP, 16);
-  WiFiManagerParameter custom_gatewayIP("gatewayIP", "Gateway IP", gatewayIP, 16);
-  WiFiManagerParameter custom_dnsIP("dnsIP", "DNS IP", dnsIP, 16);
-
-  WiFiManagerParameter custom_mqtt_server("webServer", "MQTT Server", mqtt_server, 16);
-  WiFiManagerParameter custom_mqtt_port("port", "MQTT Port", mqtt_port, 9);
-  WiFiManagerParameter custom_mqtt_user("user", "MQTT Username", mqtt_user, 20);
-  WiFiManagerParameter custom_mqtt_pass("pass", "MQTT Password", mqtt_pass, 20);
-  WiFiManagerParameter custom_wifiTimeout("timeout", "5", wifiTimeout, 3);
-  WiFiManagerParameter custom_topic_Room("Room", "Room name", Room, 20);
-  WiFiManagerParameter custom_topic_Thing("Thing", "Thing name", Thing, 20);
-
-  //WiFiManager
-  //Local intialization. Once its business is done, there is no need to keep it around
-  WiFiManager wifiManager;
+  WifiPortal& portal = getWifiPortal();
+  WiFiManager& wifiManager = portal.manager;
 
   wifiManager.setDebugOutput(false);
 
@@ -436,18 +520,18 @@ void setup() {
     wifiManager.setSTAStaticIPConfig(ip, gate, mask, dns);
   }
   //Add all parameters here
-  wifiManager.addParameter(&custom_staticIP);
-  wifiManager.addParameter(&custom_masqueIP);
-  wifiManager.addParameter(&custom_gatewayIP);
-  wifiManager.addParameter(&custom_dnsIP);
+  wifiManager.addParameter(&portal.staticIPParameter);
+  wifiManager.addParameter(&portal.masqueIPParameter);
+  wifiManager.addParameter(&portal.gatewayIPParameter);
+  wifiManager.addParameter(&portal.dnsIPParameter);
 
-  wifiManager.addParameter(&custom_mqtt_server);
-  wifiManager.addParameter(&custom_mqtt_port);
-  wifiManager.addParameter(&custom_mqtt_user);
-  wifiManager.addParameter(&custom_mqtt_pass);
-  wifiManager.addParameter(&custom_wifiTimeout);
-  wifiManager.addParameter(&custom_topic_Room);
-  wifiManager.addParameter(&custom_topic_Thing);
+  wifiManager.addParameter(&portal.mqttServerParameter);
+  wifiManager.addParameter(&portal.mqttPortParameter);
+  wifiManager.addParameter(&portal.mqttUserParameter);
+  wifiManager.addParameter(&portal.mqttPassParameter);
+  wifiManager.addParameter(&portal.wifiTimeoutParameter);
+  wifiManager.addParameter(&portal.roomParameter);
+  wifiManager.addParameter(&portal.thingParameter);
 
 
   //Set minimum quality of signal so it ignores AP's under that quality
@@ -457,13 +541,8 @@ void setup() {
   // Portail captif : niveau du signal en texte (dBm) au lieu des seules icônes
   wifiManager.setScanDispPerc(true);
 
-  //Sets timeout until configuration portal gets turned off
-  //and retries connecting to the preconfigured AP
-  wifiManager.setConfigPortalTimeout(atoi(wifiTimeout) * 60);  //Convert minutes to seconds
-
   //Fetches ssid and pass and tries to connect
-  //If it does not connect it starts an access point with the specified name
-  //and goes into a blocking loop awaiting configuration
+  //The recovery portal is opened later, while the firmware keeps retrying WiFi.
   snprintf(configSSID, sizeof(configSSID), "Clim%s", Thing);
 #ifdef SERIAL_DEBUG
   Serial.printf("wifiManager.autoConnect(%s,%s)\n",configSSID, configPW);
@@ -484,49 +563,48 @@ void setup() {
 #endif
 #endif
   saveJson(false);
-  if (!wifiManager.autoConnect(configSSID, configPW)) {
+  wifiManager.setEnableConfigPortal(false);
+  bool wifiConnected = wifiManager.autoConnect(configSSID, configPW);
+  wifiManager.setEnableConfigPortal(true);
+  if (!wifiConnected) {
 #ifdef SERIAL_DEBUG
-    Serial.println("Failed to connect and hit timeout");
+    Serial.println("WiFi unavailable; retrying in background");
 #endif
 #ifdef TELNET_DEBUG
-    Debug.println("Failed to connect and hit timeout");
+    Debug.println("WiFi unavailable; retrying in background");
 #endif
-    delay(3000);
-    //Reset and try again, or maybe put it to deep sleep
-#ifndef ESP32
-    ESP.reset();
-#else
-    ESP.restart();
-#endif
-    delay(3000);
   }
   saveJson(false);
 #ifdef SERIAL_DEBUG
-  Serial.printf("after wifiManager.autoConnect(%s,%s) OK!!!!\n",configSSID, configPW);
+  Serial.printf("after wifiManager.autoConnect(%s,%s), connected=%d\n",configSSID, configPW, wifiConnected);
 #endif
 #ifdef TELNET_DEBUG
   Debug.begin(configSSID);
 #endif
-  savedWiFiSSID = wifiManager.getWiFiSSID();
-  savedWiFiPass = wifiManager.getWiFiPass();
-  //If you get here you have connected to the WiFi
+  if (PreloadSSID[0] && PreloadFlag[0]) {
+    savedWiFiSSID = PreloadSSID;
+    savedWiFiPass = PreloadPSW;
+  } else {
+    savedWiFiSSID = wifiManager.getWiFiSSID();
+    savedWiFiPass = wifiManager.getWiFiPass();
+  }
 #ifdef SERIAL_DEBUG
-  Serial.printf("Connected...yeey savedWiFiSSID:%s, configSSID:%s\n",savedWiFiSSID.c_str(), configSSID);
+  Serial.printf("WiFi connected=%d, savedWiFiSSID:%s, configSSID:%s\n",wifiConnected,savedWiFiSSID.c_str(),configSSID);
 #endif
 
   //Read updated parameters
-  COPY_STR(staticIP, custom_staticIP.getValue());
-  COPY_STR(masqueIP, custom_masqueIP.getValue());
-  COPY_STR(gatewayIP, custom_gatewayIP.getValue());
-  COPY_STR(dnsIP, custom_dnsIP.getValue());
+  COPY_STR(staticIP, portal.staticIPParameter.getValue());
+  COPY_STR(masqueIP, portal.masqueIPParameter.getValue());
+  COPY_STR(gatewayIP, portal.gatewayIPParameter.getValue());
+  COPY_STR(dnsIP, portal.dnsIPParameter.getValue());
 
-  COPY_STR(mqtt_server, custom_mqtt_server.getValue());
-  COPY_STR(mqtt_port, custom_mqtt_port.getValue());
-  COPY_STR(mqtt_user, custom_mqtt_user.getValue());
-  COPY_STR(mqtt_pass, custom_mqtt_pass.getValue());
-  COPY_STR(wifiTimeout, custom_wifiTimeout.getValue());
-  COPY_STR(Room, custom_topic_Room.getValue());
-  COPY_STR(Thing, custom_topic_Thing.getValue());
+  COPY_STR(mqtt_server, portal.mqttServerParameter.getValue());
+  COPY_STR(mqtt_port, portal.mqttPortParameter.getValue());
+  COPY_STR(mqtt_user, portal.mqttUserParameter.getValue());
+  COPY_STR(mqtt_pass, portal.mqttPassParameter.getValue());
+  COPY_STR(wifiTimeout, portal.wifiTimeoutParameter.getValue());
+  COPY_STR(Room, portal.roomParameter.getValue());
+  COPY_STR(Thing, portal.thingParameter.getValue());
 
 
   //Construct topic names
@@ -610,5 +688,3 @@ void setup() {
   refreshWifiCache();
   setupMHI();
 }
-
-

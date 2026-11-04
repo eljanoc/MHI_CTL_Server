@@ -10,6 +10,7 @@ WebServer webServer(80);
 #include <ESP8266WebServer.h>
 ESP8266WebServer webServer(80);
 #endif
+static volatile bool applicationWebServerEnabled = true;
 
 #ifdef TELNET_DEBUG
 extern RemoteDebug Debug;
@@ -192,11 +193,23 @@ static void webServerTaskSetup() {
     free(data);
   });
 
-  webServer.begin();
+  if (applicationWebServerEnabled)
+    webServer.begin();
 }
 
 void loopWebServer(void) {
-  webServer.handleClient();
+  if (applicationWebServerEnabled)
+    webServer.handleClient();
+}
+
+void setApplicationWebServerEnabled(bool enabled) {
+  if (applicationWebServerEnabled == enabled)
+    return;
+  applicationWebServerEnabled = enabled;
+  if (enabled)
+    webServer.begin();
+  else
+    webServer.stop();
 }
 
 #ifdef MULTICORE

@@ -2927,6 +2927,10 @@ void WiFiManager::setConfigPortalBlocking(boolean shouldBlock) {
   _configPortalIsBlocking = shouldBlock;
 }
 
+void WiFiManager::setDisableSTAConn(boolean disable) {
+  _disableSTAConn = disable;
+}
+
 /**
  * toggle restore persistent, track internally
  * sets ESP wifi.persistent so we can remember it and restore user preference on destruct

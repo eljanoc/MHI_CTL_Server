@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.35-trace)
+# MHI-AC-CtrlServer (V4.36-trace)
 
 [English](README.md) | **Français**
 
@@ -70,6 +70,8 @@ Les broches sont définies dans `MHI-AC-Ctrl-core.h`. La sonde de température D
 
 Les réglages sont conservés dans la mémoire de l'ESP (LittleFS), pas dans le dépôt Git.
 
+Si un réseau WiFi configuré devient indisponible, l'ESP le retente en arrière-plan. Après `wifiTimeout` (minutes, 2 par défaut), il ouvre le point d'accès de secours `Clim<nom>` et continue à retenter le réseau enregistré. Le point d'accès se ferme automatiquement au retour du WiFi ; une coupure seule ne provoque plus de redémarrage.
+
 ## Sécurité
 Des valeurs par défaut sont codées en dur dans le firmware. Change-les avant tout usage hors d'un réseau local de confiance :
 - **Page web** : identifiant `John` et mot de passe `Pass` (`webserver.cpp`, `aswebserver.cpp`).
@@ -107,6 +109,7 @@ if((String)(__FlashStringHelper *)(_menutokens[menuId]) == "custom" && _customMe
 ```
 La correction est déjà appliquée dans `libs/WiFiManager` du projet et dans la bibliothèque installée (`Documents\Arduino\libraries\WiFiManager`). Si WiFiManager est réinstallée ou mise à jour, il faut la refaire.
 Cette modification n'est pas nécessaire pour l'ESP32 : elle répond au problème observé sur ESP8266 uniquement.
+Le portail de secours exige aussi l'extension `setDisableSTAConn()` du projet dans les deux copies de la bibliothèque, pour que WiFiManager garde les tentatives de reconnexion actives pendant que son point d'accès est ouvert.
 
 ### Correction de RemoteDebug pour ESP32
 La RemoteDebug 3.0.5 officielle ne compile pas avec le core ESP32 3.x : `src/utility/WebSockets.cpp` inclut `<hwcrypto/sha.h>`, qui n'existe plus. Le seul changement est cette ligne, remplacée par :
@@ -136,6 +139,9 @@ Les tests tournent sur PC, sans carte : `g++ -I. test/test_params.cpp -o test_pa
 
 ## Versions
 Les versions sont gérées avec des tags Git, par exemple `v4.25-trace`.
+
+### V4.36
+Une coupure Wi-Fi ne redémarre plus la carte. Elle continue à retenter le réseau enregistré et, après `wifiTimeout` minutes sans Wi-Fi (2 par défaut ; immédiatement si aucun réseau n'est enregistré), ouvre aussi le point d'accès de secours `Clim<nom>`. Le point d'accès se ferme automatiquement au retour du Wi-Fi. Le serveur web de l'application est suspendu pendant que le portail est ouvert. `WiFiManager` gagne `setDisableSTAConn()`. Testé sur ESP32 et ESP8266.
 
 ### V4.35
 Le portail de configuration Wi-Fi (mode AP) affiche maintenant le niveau de signal de chaque réseau en dBm au lieu des seules icônes (`wm_strings_en.h` / `wm_strings_es.h` de la WiFiManager embarquée, plus `setScanDispPerc(true)`). Corrigé : une fois connectée, la carte continuait à diffuser son point d'accès par défaut `ESP_xxxxxx` (mode AP+STA) ; l'AP est maintenant coupé et la carte reste en station seule. Suppression de variables inutilisées.

@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.35-trace)
+# MHI-AC-CtrlServer (V4.36-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -70,6 +70,8 @@ The pins are defined in `MHI-AC-Ctrl-core.h`. The optional DS18B20 temperature s
 
 The settings are stored in the ESP memory (LittleFS), not in the Git repository.
 
+If a configured WiFi network becomes unavailable, the ESP retries it in the background. After the configured `wifiTimeout` (minutes, 2 by default), it opens the `Clim<name>` recovery access point and keeps retrying the saved network. The access point closes automatically when WiFi returns; an outage alone no longer causes a restart.
+
 ## Security
 Default values are hard-coded in the firmware. Change them before any use outside a trusted local network:
 - **Web page**: login `John` and password `Pass` (`webserver.cpp`, `aswebserver.cpp`).
@@ -107,6 +109,7 @@ if((String)(__FlashStringHelper *)(_menutokens[menuId]) == "custom" && _customMe
 ```
 The fix is already applied in the project's `libs/WiFiManager` and in the installed library (`Documents\Arduino\libraries\WiFiManager`). If WiFiManager is reinstalled or updated, it must be applied again.
 This change is not needed for the ESP32: it addresses the problem observed on ESP8266 only.
+The recovery portal also requires the project's `setDisableSTAConn()` extension in both library copies, so WiFiManager keeps station retries enabled while its access point is running.
 
 ### RemoteDebug fix for ESP32
 The official RemoteDebug 3.0.5 does not compile with the ESP32 core 3.x: `src/utility/WebSockets.cpp` includes `<hwcrypto/sha.h>`, which no longer exists. The only change is that line, replaced by:
@@ -136,6 +139,9 @@ Tests run on a PC, no board needed: `g++ -I. test/test_params.cpp -o test_params
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.36
+Wi-Fi outages no longer reboot the board. It keeps retrying the saved network and, after `wifiTimeout` minutes without Wi-Fi (2 by default; immediately if no network is saved), also opens the `Clim<name>` recovery access point. The access point closes automatically when Wi-Fi returns. The application web server is paused while the portal is open. `WiFiManager` gained `setDisableSTAConn()`. Tested on ESP32 and ESP8266.
 
 ### V4.35
 The Wi-Fi configuration portal (AP mode) now shows each network's signal level in dBm instead of icons only (`wm_strings_en.h` / `wm_strings_es.h` of the bundled WiFiManager, plus `setScanDispPerc(true)`). Fixed: once connected, the board kept broadcasting its default `ESP_xxxxxx` access point (AP+STA mode); the AP is now switched off and the board stays in station mode. Removed unused variables.

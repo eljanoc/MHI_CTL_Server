@@ -25,7 +25,7 @@ extern char mqtt_enabled[2];
 extern char mqtt_port[9];
 extern char mqtt_user[20];
 extern char mqtt_pass[20];
-extern char wifiTimeout[3];  //Timeout in minutes (max. 99) before WiFi configuration portal is turned off and the ESP tries to connect again to the previously configured AP (if any)
+extern char wifiTimeout[3];  //Minutes without WiFi before the recovery access point opens
 extern char Room[20];
 extern char topic_prefix[42];
 extern char MQTT_SET_PREFIX[60];
@@ -43,6 +43,8 @@ extern NTPClient timeClient;
 
 extern String savedWiFiSSID;
 extern String savedWiFiPass;
+void startWifiRecoveryPortal();
+void handleWifiRecoveryPortal();
 char webPuissance[6]="";
 char webIpSalon[40]="";
 char webIpChNO[40]="";
@@ -163,48 +165,41 @@ long unsigned int lastPrintMillis = 0;
 extern void startWebPortal();
 
 void setWiFi() {
-#ifdef TELNET_DEBUG
-  Debug.println("Start setWiFI");
-#endif
-  char cSSID[30];
-  savedWiFiSSID.toCharArray(cSSID, savedWiFiSSID.length() + 1);
-  char cPass[30];
-  savedWiFiPass.toCharArray(cPass, savedWiFiPass.length() + 1);
+  static bool disconnected = false;
+  static bool attemptedConnection = false;
+  static unsigned long disconnectedAt = 0;
+  static unsigned long lastAttemptAt = 0;
+  unsigned long now = millis();
 
-#ifdef SERIAL_DEBUG
-  Serial.printf("Wifi disconnect in Loop -> reconnecting\n");
-#endif
-
-  bool ledValue = LED_LOW;
-  int status;
-  nbDeconnect++;
-  for (int i = 0; i < 6*2; i++) { //12 fois 10 secondes = 2mn
-    WiFi.disconnect();
-    status = WiFi.begin(cSSID, cPass);
-#ifdef SERIAL_DEBUG
-    Serial.printf("\nStatus=%d\n", status);
-#endif
-    if (status == WL_CONNECTED) {
+  if (WiFi.isConnected()) {
+    if (disconnected) {
+      disconnected = false;
+      attemptedConnection = false;
       digitalWrite(LED_BUILTIN, LED_LOW);
-      sendConnexion2mqtt (false);
-      return;
+      sendConnexion2mqtt(false);
     }
-    for (int j = 0; j < 30; j++) {  //30 fois 325ms = 10 secondes
-#ifdef SERIAL_DEBUG
-      Serial.print(".");
-#endif
-      digitalWrite(LED_BUILTIN, ledValue);
-      status = WiFi.status();
-      if ((ledValue == LED_LOW) && (status == WL_CONNECTED))
-        return;
-      if (ledValue==LED_LOW)
-        delay(600);
-      else
-        delay(50);
-      ledValue ^= 1;
-    }
+    return;
   }
-  ESP.restart();
+
+  if (!disconnected) {
+    disconnected = true;
+    disconnectedAt = now;
+    attemptedConnection = false;
+    ++nbDeconnect;
+  }
+
+  if (savedWiFiSSID.length() > 0 &&
+      (!attemptedConnection || now - lastAttemptAt >= 10000)) {
+    WiFi.begin(savedWiFiSSID.c_str(), savedWiFiPass.c_str());
+    lastAttemptAt = now;
+    attemptedConnection = true;
+  }
+
+  unsigned long delayMinutes = strtoul(wifiTimeout, NULL, 10);
+  if (savedWiFiSSID.length() == 0 || delayMinutes == 0 ||
+      now - disconnectedAt >= delayMinutes * 60000UL) {
+    startWifiRecoveryPortal();
+  }
 }
 
 void printInfo();
@@ -222,10 +217,12 @@ void connect() {
 
     if (!WiFi.isConnected())
       setWiFi();
+    if (!WiFi.isConnected()) {
+      strcpy(MQTTconnectedFlag, "no");
+      return;
+    }
 
-    //MQTT connection: Attempt to connect to MQTT broker 3 times: SUCCESS -> continue | FAILED restart ESP
-    //On restart it will first try to connect to the previously set AP. If that fails the config portal will be started.
-    //If the config portal is not used within wifiTimeout (set in portal), the ESP will retry connecting to the previously set AP again.
+    // MQTT retries only begin after WiFi has been restored.
 #ifdef ESP8266
     espClient.setTimeout(250);
 #endif
@@ -365,8 +362,8 @@ void loop() {
 #endif
   digitalWrite(LED_BUILTIN, LED_LOW);
 
-  if (!WiFi.isConnected())
-    setWiFi();
+  setWiFi();
+  handleWifiRecoveryPortal();
 
   if ((curMillis - lastTimeUpdateMillis) > tWait) {
     lastTimeUpdateMillis = curMillis;

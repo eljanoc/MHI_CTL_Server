@@ -387,6 +387,9 @@ class WiFiManager
     
     //if true, always show static dns, esle only show if set via setSTAStaticIPConfig
     void          setShowDnsFields(boolean alwaysShow);
+
+    // Keep station mode enabled while the config AP is running and STA is disconnected.
+    void          setDisableSTAConn(boolean disable);
     
     // toggle showing the saved wifi password in wifi form, could be a security issue.
     void          setShowPassword(boolean show);
