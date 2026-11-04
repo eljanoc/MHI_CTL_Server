@@ -171,11 +171,28 @@ static const char *champ(const char *s, int index, char *buf, size_t size) {
   return buf;
 }
 
+static mhi::Config makeConfig(const char *ip, const char *masque, const char *gw, const char *dns,
+                              const char *srv, const char *port, const char *timeout,
+                              const char *room, const char *thing, const char *enabled) {
+  mhi::Config c;
+  MHI_COPY(c.staticIP, ip);
+  MHI_COPY(c.masqueIP, masque);
+  MHI_COPY(c.gatewayIP, gw);
+  MHI_COPY(c.dnsIP, dns);
+  MHI_COPY(c.mqtt_server, srv);
+  MHI_COPY(c.mqtt_port, port);
+  MHI_COPY(c.wifiTimeout, timeout);
+  MHI_COPY(c.Room, room);
+  MHI_COPY(c.Thing, thing);
+  MHI_COPY(c.mqtt_enabled, enabled);
+  return c;
+}
+
 static void test_param_data_ordre() {
   char out[400];
   char b[64];
-  mhi::buildParamsBase(out, sizeof(out), "ip", "masque", "gw", "dns", "srv", "port", "to", "room",
-                       "thing", "1");
+  mhi::buildParamsBase(out, sizeof(out),
+                       makeConfig("ip", "masque", "gw", "dns", "srv", "port", "to", "room", "thing", "1"));
   CHECK(champs(out) == 10);
   CHECK_STR(champ(out, 0, b, sizeof(b)), "ip");
   CHECK_STR(champ(out, 4, b, sizeof(b)), "srv");
@@ -198,7 +215,7 @@ static void test_param_data_ordre() {
 
 static void test_param_data_tampon_plein() {
   char out[60];
-  mhi::buildParamsBase(out, sizeof(out), "ip", "m", "g", "d", "s", "p", "t", "r", "th", "1");
+  mhi::buildParamsBase(out, sizeof(out), makeConfig("ip", "m", "g", "d", "s", "p", "t", "r", "th", "1"));
   size_t avant = strlen(out);
   CHECK(!mhi::appendNetwork(out, sizeof(out), "un-reseau-wifi-avec-un-nom-bien-trop-long-pour-le-tampon",
                             "x", "y", -100));
@@ -209,8 +226,9 @@ static void test_param_data_tampon_plein() {
 static void test_aller_retour() {
   // Ce que /param_data envoie puis ce que la page renvoie à /NewParam : mêmes champs
   char out[400];
-  mhi::buildParamsBase(out, sizeof(out), "1.1.1.1", "2.2.2.2", "3.3.3.3", "4.4.4.4", "5.5.5.5",
-                       "1883", "7", "Salon", "Clim", "0");
+  mhi::buildParamsBase(out, sizeof(out),
+                       makeConfig("1.1.1.1", "2.2.2.2", "3.3.3.3", "4.4.4.4", "5.5.5.5", "1883", "7",
+                                  "Salon", "Clim", "0"));
   strcat(out, "?monSsid?monMdp?");
   mhi::NewParams p;
   CHECK(mhi::parseNewParams(out, p));
@@ -222,7 +240,34 @@ static void test_aller_retour() {
   CHECK_STR(p.PreloadPSW, "monMdp");
 }
 
+static void test_config_defauts_et_application() {
+  mhi::Config c;
+  CHECK_STR(c.staticIP, "0.0.0.0");
+  CHECK_STR(c.mqtt_server, "192.168.0.42");
+  CHECK_STR(c.mqtt_port, "1883");
+  CHECK_STR(c.mqtt_enabled, "1");
+  CHECK_STR(c.wifiTimeout, "2");
+  CHECK_STR(c.Room, "Aircon");
+  CHECK_STR(c.Thing, "RoomName");
+  CHECK_STR(c.PreloadSSID, "");
+
+  // applyNewParams ne touche pas aux identifiants MQTT
+  MHI_COPY(c.mqtt_user, "user");
+  MHI_COPY(c.mqtt_pass, "pass");
+  mhi::NewParams p;
+  CHECK(mhi::parseNewParams(FULL, p));
+  mhi::applyNewParams(c, p);
+  CHECK_STR(c.staticIP, "192.168.0.141");
+  CHECK_STR(c.Thing, "Clim");
+  CHECK_STR(c.PreloadSSID, "maBox");
+  CHECK_STR(c.PreloadPSW, "monMdp");
+  CHECK_STR(c.PreloadFlag, "o");
+  CHECK_STR(c.mqtt_user, "user");
+  CHECK_STR(c.mqtt_pass, "pass");
+}
+
 int main() {
+  test_config_defauts_et_application();
   test_parse_champs();
   test_mqtt_enabled();
   test_sans_wifi();

@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.36-trace)
+# MHI-AC-CtrlServer (V4.37-trace)
 
 [English](README.md) | **Français**
 
@@ -139,6 +139,9 @@ Les tests tournent sur PC, sans carte : `g++ -I. test/test_params.cpp -o test_pa
 
 ## Versions
 Les versions sont gérées avec des tags Git, par exemple `v4.25-trace`.
+
+### V4.37
+Corrigé : sur une flash totalement effacée, les paramètres saisis dans le portail Wi-Fi (IP fixe, masque, passerelle, DNS, MQTT...) étaient perdus au premier redémarrage, car le système de fichiers fraîchement formaté n'était pas monté avant l'écriture de `config.json`. Toutes les variables de configuration sont regroupées dans une structure `mhi::Config config` (`params_logic.h`).
 
 ### V4.36
 Une coupure Wi-Fi ne redémarre plus la carte. Elle continue à retenter le réseau enregistré et, après `wifiTimeout` minutes sans Wi-Fi (2 par défaut ; immédiatement si aucun réseau n'est enregistré), ouvre aussi le point d'accès de secours `Clim<nom>`. Le point d'accès se ferme automatiquement au retour du Wi-Fi. Le serveur web de l'application est suspendu pendant que le portail est ouvert. `WiFiManager` gagne `setDisableSTAConn()`. Testé sur ESP32 et ESP8266.

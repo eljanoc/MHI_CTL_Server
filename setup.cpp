@@ -2,22 +2,8 @@
 #include "params_logic.h"
 #include <WiFiManager.h>   //https://github.com/tzapu/WiFiManager
 
-//Variables below are initial values that can be changed at any time from the WiFiManager configuration portal and will be stored in flash memory. If there are different values in config.json, they are overwritten.
-char staticIP[16] = "0.0.0.0";
-char masqueIP[16] = "0.0.0.0";
-char gatewayIP[16] = "0.0.0.0";
-char dnsIP[16] = "0.0.0.0";
-char mqtt_server[16] = "192.168.0.42";
-char mqtt_port[9] = "1883";
-char mqtt_enabled[2] = "1";  //"1" = MQTT actif, "0" = désactivé (mode autonome)
-char mqtt_user[20] = "";
-char mqtt_pass[20] = "";
-char wifiTimeout[3] = "2";  //Minutes without WiFi before the recovery access point opens
-char Room[20] = "Aircon";
-char Thing[20] = "RoomName";
-char PreloadSSID[20]="";
-char PreloadPSW[20]="";
-char PreloadFlag[3]="";
+//Initial values (see mhi::Config) can be changed at any time from the WiFiManager configuration portal and will be stored in flash memory. If there are different values in config.json, they are overwritten.
+mhi::Config config;
 char topic_prefix[42] = "";
 char MQTT_SET_PREFIX[60] = "set/";
 char MQTT_OP_PREFIX[60] = "OpData";
@@ -66,17 +52,17 @@ struct WifiPortal {
   WiFiManagerParameter thingParameter;
 
   WifiPortal()
-      : staticIPParameter("staticIP", "Static IP", staticIP, 16),
-        masqueIPParameter("masqueIP", "Masque IP", masqueIP, 16),
-        gatewayIPParameter("gatewayIP", "Gateway IP", gatewayIP, 16),
-        dnsIPParameter("dnsIP", "DNS IP", dnsIP, 16),
-        mqttServerParameter("webServer", "MQTT Server", mqtt_server, 16),
-        mqttPortParameter("port", "MQTT Port", mqtt_port, 9),
-        mqttUserParameter("user", "MQTT Username", mqtt_user, 20),
-        mqttPassParameter("pass", "MQTT Password", mqtt_pass, 20),
-        wifiTimeoutParameter("timeout", "WiFi recovery delay (min)", wifiTimeout, 3),
-        roomParameter("Room", "Room name", Room, 20),
-        thingParameter("Thing", "Thing name", Thing, 20) {}
+      : staticIPParameter("staticIP", "Static IP", config.staticIP, 16),
+        masqueIPParameter("masqueIP", "Masque IP", config.masqueIP, 16),
+        gatewayIPParameter("gatewayIP", "Gateway IP", config.gatewayIP, 16),
+        dnsIPParameter("dnsIP", "DNS IP", config.dnsIP, 16),
+        mqttServerParameter("webServer", "MQTT Server", config.mqtt_server, 16),
+        mqttPortParameter("port", "MQTT Port", config.mqtt_port, 9),
+        mqttUserParameter("user", "MQTT Username", config.mqtt_user, 20),
+        mqttPassParameter("pass", "MQTT Password", config.mqtt_pass, 20),
+        wifiTimeoutParameter("timeout", "WiFi recovery delay (min)", config.wifiTimeout, 3),
+        roomParameter("Room", "Room name", config.Room, 20),
+        thingParameter("Thing", "Thing name", config.Thing, 20) {}
 };
 
 static WifiPortal& getWifiPortal() {
@@ -145,8 +131,7 @@ void refreshWifiCache() {
 
 char *getParametersString (char *tmp, size_t size)
 {
-  mhi::buildParamsBase(tmp, size, staticIP, masqueIP, gatewayIP, dnsIP, mqtt_server, mqtt_port,
-                       wifiTimeout, Room, Thing, mqtt_enabled);
+  mhi::buildParamsBase(tmp, size, config);
   refreshWifiCache();
   for (int thisNet = 0; thisNet < wifiCacheCount; thisNet++) {
 #ifdef SERIAL_DEBUG
@@ -171,22 +156,22 @@ void saveJson (bool f){
   DynamicJsonDocument json(512);
 
 
-  json["staticIP"]= staticIP;
-  json["masqueIP"]= masqueIP;
-  json["gatewayIP"]= gatewayIP;
-  json["dnsIP"]= dnsIP;
-  json["mqtt_server"]= mqtt_server;
-  json["mqtt_port"]= mqtt_port;
-  json["mqtt_enabled"]= mqtt_enabled;
-  json["mqtt_user"]= mqtt_user;
-  json["mqtt_pass"]= mqtt_pass;
-  json["wifiTimeout"]= wifiTimeout;
-  json["Room"]= Room;
-  json["Thing"]= Thing;
-  json["PreloadSSID"]= PreloadSSID;
-  json["PreloadPSW"]= PreloadPSW;
+  json["staticIP"]= config.staticIP;
+  json["masqueIP"]= config.masqueIP;
+  json["gatewayIP"]= config.gatewayIP;
+  json["dnsIP"]= config.dnsIP;
+  json["mqtt_server"]= config.mqtt_server;
+  json["mqtt_port"]= config.mqtt_port;
+  json["mqtt_enabled"]= config.mqtt_enabled;
+  json["mqtt_user"]= config.mqtt_user;
+  json["mqtt_pass"]= config.mqtt_pass;
+  json["wifiTimeout"]= config.wifiTimeout;
+  json["Room"]= config.Room;
+  json["Thing"]= config.Thing;
+  json["PreloadSSID"]= config.PreloadSSID;
+  json["PreloadPSW"]= config.PreloadPSW;
   if (f)
-    json["PreloadFlag"]= PreloadFlag;
+    json["PreloadFlag"]= config.PreloadFlag;
   else
     json["PreloadFlag"]= "";
   
@@ -212,17 +197,17 @@ void saveJson (bool f){
 
 static void applyWifiPortalParameters() {
   WifiPortal& portal = getWifiPortal();
-  COPY_STR(staticIP, portal.staticIPParameter.getValue());
-  COPY_STR(masqueIP, portal.masqueIPParameter.getValue());
-  COPY_STR(gatewayIP, portal.gatewayIPParameter.getValue());
-  COPY_STR(dnsIP, portal.dnsIPParameter.getValue());
-  COPY_STR(mqtt_server, portal.mqttServerParameter.getValue());
-  COPY_STR(mqtt_port, portal.mqttPortParameter.getValue());
-  COPY_STR(mqtt_user, portal.mqttUserParameter.getValue());
-  COPY_STR(mqtt_pass, portal.mqttPassParameter.getValue());
-  COPY_STR(wifiTimeout, portal.wifiTimeoutParameter.getValue());
-  COPY_STR(Room, portal.roomParameter.getValue());
-  COPY_STR(Thing, portal.thingParameter.getValue());
+  COPY_STR(config.staticIP, portal.staticIPParameter.getValue());
+  COPY_STR(config.masqueIP, portal.masqueIPParameter.getValue());
+  COPY_STR(config.gatewayIP, portal.gatewayIPParameter.getValue());
+  COPY_STR(config.dnsIP, portal.dnsIPParameter.getValue());
+  COPY_STR(config.mqtt_server, portal.mqttServerParameter.getValue());
+  COPY_STR(config.mqtt_port, portal.mqttPortParameter.getValue());
+  COPY_STR(config.mqtt_user, portal.mqttUserParameter.getValue());
+  COPY_STR(config.mqtt_pass, portal.mqttPassParameter.getValue());
+  COPY_STR(config.wifiTimeout, portal.wifiTimeoutParameter.getValue());
+  COPY_STR(config.Room, portal.roomParameter.getValue());
+  COPY_STR(config.Thing, portal.thingParameter.getValue());
 }
 
 void startWifiRecoveryPortal() {
@@ -304,32 +289,20 @@ void newParams() {
     return;
   }
   webServer.send(200, "text/plain", "restarting...");
-  COPY_STR(staticIP, np.staticIP);
-  COPY_STR(masqueIP, np.masqueIP);
-  COPY_STR(gatewayIP, np.gatewayIP);
-  COPY_STR(dnsIP, np.dnsIP);
-  COPY_STR(mqtt_server, np.mqtt_server);
-  COPY_STR(mqtt_port, np.mqtt_port);
-  COPY_STR(wifiTimeout, np.wifiTimeout);
-  COPY_STR(Room, np.Room);
-  COPY_STR(Thing, np.Thing);
-  COPY_STR(mqtt_enabled, np.mqtt_enabled);
-  COPY_STR(PreloadSSID, np.PreloadSSID);
-  COPY_STR(PreloadPSW, np.PreloadPSW);
-  COPY_STR(PreloadFlag, np.PreloadFlag);
+  mhi::applyNewParams(config, np);
 
 #ifdef SERIAL_DEBUG
-Serial.printf("staticIP:%s\n",staticIP);
-Serial.printf("masqueIP:%s\n",masqueIP);
-Serial.printf("gatewayIP:%s\n",gatewayIP);
-Serial.printf("dnsIP:%s\n",dnsIP);
-Serial.printf("mqtt_server:%s\n",mqtt_server);
-Serial.printf("mqtt_port:%s\n",mqtt_port);
-Serial.printf("wifiTimeout:%s\n",wifiTimeout);
-Serial.printf("Room:%s\n",Room);
-Serial.printf("Thing:%s\n",Thing);
-Serial.printf("PreloadSSID:%s\n",PreloadSSID);
-Serial.printf("PreloadPSW:%s\n",PreloadPSW);
+Serial.printf("staticIP:%s\n",config.staticIP);
+Serial.printf("masqueIP:%s\n",config.masqueIP);
+Serial.printf("gatewayIP:%s\n",config.gatewayIP);
+Serial.printf("dnsIP:%s\n",config.dnsIP);
+Serial.printf("mqtt_server:%s\n",config.mqtt_server);
+Serial.printf("mqtt_port:%s\n",config.mqtt_port);
+Serial.printf("wifiTimeout:%s\n",config.wifiTimeout);
+Serial.printf("Room:%s\n",config.Room);
+Serial.printf("Thing:%s\n",config.Thing);
+Serial.printf("PreloadSSID:%s\n",config.PreloadSSID);
+Serial.printf("PreloadPSW:%s\n",config.PreloadPSW);
 #endif
 
   saveJson(true);
@@ -437,22 +410,22 @@ void setup() {
           }
           else 
           {
-            COPY_STR(staticIP, json["staticIP"] | "");
-            COPY_STR(masqueIP, json["masqueIP"] | "");
-            COPY_STR(gatewayIP, json["gatewayIP"] | "");
-            COPY_STR(dnsIP, json["dnsIP"] | "");
-            COPY_STR(mqtt_server, json["mqtt_server"] | "");
-            COPY_STR(mqtt_port, json["mqtt_port"] | "");
+            COPY_STR(config.staticIP, json["staticIP"] | "");
+            COPY_STR(config.masqueIP, json["masqueIP"] | "");
+            COPY_STR(config.gatewayIP, json["gatewayIP"] | "");
+            COPY_STR(config.dnsIP, json["dnsIP"] | "");
+            COPY_STR(config.mqtt_server, json["mqtt_server"] | "");
+            COPY_STR(config.mqtt_port, json["mqtt_port"] | "");
             // Absent des anciens config.json : MQTT actif par défaut
-            COPY_STR(mqtt_enabled, (json["mqtt_enabled"] | "1")[0] == '0' ? "0" : "1");
-            COPY_STR(mqtt_user, json["mqtt_user"] | "");
-            COPY_STR(mqtt_pass, json["mqtt_pass"] | "");
-            COPY_STR(wifiTimeout, json["wifiTimeout"] | "");
-            COPY_STR(Room, json["Room"] | "");
-            COPY_STR(Thing, json["Thing"] | "");
-            COPY_STR(PreloadSSID, json["PreloadSSID"] | "");
-            COPY_STR(PreloadPSW, json["PreloadPSW"] | "");
-            COPY_STR(PreloadFlag, json["PreloadFlag"] | "");
+            COPY_STR(config.mqtt_enabled, (json["mqtt_enabled"] | "1")[0] == '0' ? "0" : "1");
+            COPY_STR(config.mqtt_user, json["mqtt_user"] | "");
+            COPY_STR(config.mqtt_pass, json["mqtt_pass"] | "");
+            COPY_STR(config.wifiTimeout, json["wifiTimeout"] | "");
+            COPY_STR(config.Room, json["Room"] | "");
+            COPY_STR(config.Thing, json["Thing"] | "");
+            COPY_STR(config.PreloadSSID, json["PreloadSSID"] | "");
+            COPY_STR(config.PreloadPSW, json["PreloadPSW"] | "");
+            COPY_STR(config.PreloadFlag, json["PreloadFlag"] | "");
             formatFlag=false;
           }
         } 
@@ -485,6 +458,8 @@ void setup() {
   Serial.println("Format LittleFS");
 #endif
     LittleFS.format();
+    // Flash vierge : begin() a échoué, il faut monter le FS formaté pour que saveJson() puisse écrire
+    LittleFS.begin();
   }
 
   WifiPortal& portal = getWifiPortal();
@@ -504,18 +479,18 @@ void setup() {
   //Optional: Set static ip
   // wifiManager.setSTAStaticIPConfig(IPAddress(0,0,0,0), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
 #ifdef SERIAL_DEBUG
-  Serial.printf("staticIP:%s, masqueIP:%s, gatewayIP:%s, dnsIP:%s\n", staticIP, masqueIP, gatewayIP, dnsIP);
+  Serial.printf("staticIP:%s, masqueIP:%s, gatewayIP:%s, dnsIP:%s\n", config.staticIP, config.masqueIP, config.gatewayIP, config.dnsIP);
 #endif
 #ifdef TELNET_DEBUG
-  Debug.printf("staticIP:%s, masqueIP:%s, gatewayIP:%s, dnsIP:%s\n", staticIP, masqueIP, gatewayIP, dnsIP);
+  Debug.printf("staticIP:%s, masqueIP:%s, gatewayIP:%s, dnsIP:%s\n", config.staticIP, config.masqueIP, config.gatewayIP, config.dnsIP);
 #endif
 
-  if (strcmp(staticIP, "0.0.0.0") && strcmp(masqueIP, "0.0.0.0") && strcmp(gatewayIP, "0.0.0.0") && strcmp(dnsIP, "0.0.0.0")) {
+  if (strcmp(config.staticIP, "0.0.0.0") && strcmp(config.masqueIP, "0.0.0.0") && strcmp(config.gatewayIP, "0.0.0.0") && strcmp(config.dnsIP, "0.0.0.0")) {
     IPAddress ip, mask, gate, dns;
-    ip.fromString(staticIP);
-    mask.fromString(masqueIP);
-    gate.fromString(gatewayIP);
-    dns.fromString(dnsIP);
+    ip.fromString(config.staticIP);
+    mask.fromString(config.masqueIP);
+    gate.fromString(config.gatewayIP);
+    dns.fromString(config.dnsIP);
     Serial.printf("call wifiManager.setSTAStaticIPConfig\n");
     wifiManager.setSTAStaticIPConfig(ip, gate, mask, dns);
   }
@@ -543,19 +518,19 @@ void setup() {
 
   //Fetches ssid and pass and tries to connect
   //The recovery portal is opened later, while the firmware keeps retrying WiFi.
-  snprintf(configSSID, sizeof(configSSID), "Clim%s", Thing);
+  snprintf(configSSID, sizeof(configSSID), "Clim%s", config.Thing);
 #ifdef SERIAL_DEBUG
   Serial.printf("wifiManager.autoConnect(%s,%s)\n",configSSID, configPW);
 #endif
 
 
 #if 1
-  if (PreloadSSID[0] && PreloadFlag[0])
+  if (config.PreloadSSID[0] && config.PreloadFlag[0])
   {
 #ifdef SERIAL_DEBUG
-    Serial.printf("PreloadWiFi %s,%s\n",PreloadSSID, PreloadPSW);
+    Serial.printf("PreloadWiFi %s,%s\n",config.PreloadSSID, config.PreloadPSW);
 #endif
-    wifiManager.preloadWiFi(PreloadSSID, PreloadPSW);
+    wifiManager.preloadWiFi(config.PreloadSSID, config.PreloadPSW);
   }
 #ifdef SERIAL_DEBUG
   else
@@ -581,9 +556,9 @@ void setup() {
 #ifdef TELNET_DEBUG
   Debug.begin(configSSID);
 #endif
-  if (PreloadSSID[0] && PreloadFlag[0]) {
-    savedWiFiSSID = PreloadSSID;
-    savedWiFiPass = PreloadPSW;
+  if (config.PreloadSSID[0] && config.PreloadFlag[0]) {
+    savedWiFiSSID = config.PreloadSSID;
+    savedWiFiPass = config.PreloadPSW;
   } else {
     savedWiFiSSID = wifiManager.getWiFiSSID();
     savedWiFiPass = wifiManager.getWiFiPass();
@@ -593,23 +568,12 @@ void setup() {
 #endif
 
   //Read updated parameters
-  COPY_STR(staticIP, portal.staticIPParameter.getValue());
-  COPY_STR(masqueIP, portal.masqueIPParameter.getValue());
-  COPY_STR(gatewayIP, portal.gatewayIPParameter.getValue());
-  COPY_STR(dnsIP, portal.dnsIPParameter.getValue());
-
-  COPY_STR(mqtt_server, portal.mqttServerParameter.getValue());
-  COPY_STR(mqtt_port, portal.mqttPortParameter.getValue());
-  COPY_STR(mqtt_user, portal.mqttUserParameter.getValue());
-  COPY_STR(mqtt_pass, portal.mqttPassParameter.getValue());
-  COPY_STR(wifiTimeout, portal.wifiTimeoutParameter.getValue());
-  COPY_STR(Room, portal.roomParameter.getValue());
-  COPY_STR(Thing, portal.thingParameter.getValue());
+  applyWifiPortalParameters();
 
 
   //Construct topic names
   //Topic prefix = "Room/Thing/"
-  snprintf(topic_prefix, sizeof(topic_prefix), "%.20s/%.20s/", Room, Thing);
+  snprintf(topic_prefix, sizeof(topic_prefix), "%.20s/%.20s/", config.Room, config.Thing);
 
   //Start all topics with topic prefix
   {
@@ -649,7 +613,7 @@ void setup() {
 #endif
 
   {  //Connect to MQTT broker and set callback
-    MQTTclient.setServer(mqtt_server, atoi(mqtt_port));
+    MQTTclient.setServer(config.mqtt_server, atoi(config.mqtt_port));
     MQTTclient.setCallback(MQTT_subscribe_callback);
   }
   //Configure Arduino OTA updater

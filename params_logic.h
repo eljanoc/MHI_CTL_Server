@@ -23,7 +23,27 @@ const size_t NEWPARAM_MAX_LEN = 256;
 // Séparateurs '?' obligatoires : 10 champs de configuration
 const int NEWPARAM_MIN_SEPARATORS = 10;
 
-// Tailles identiques aux variables globales de setup.cpp
+// Configuration modifiable depuis le portail, la page paramètres ou config.json.
+// Les valeurs initiales servent tant que rien n'est enregistré.
+struct Config {
+  char staticIP[16] = "0.0.0.0";
+  char masqueIP[16] = "0.0.0.0";
+  char gatewayIP[16] = "0.0.0.0";
+  char dnsIP[16] = "0.0.0.0";
+  char mqtt_server[16] = "192.168.0.42";
+  char mqtt_port[9] = "1883";
+  char mqtt_enabled[2] = "1";  // "1" = MQTT actif, "0" = désactivé (mode autonome)
+  char mqtt_user[20] = "";
+  char mqtt_pass[20] = "";
+  char wifiTimeout[3] = "2";  // Minutes sans Wi-Fi avant l'ouverture du point d'accès de secours
+  char Room[20] = "Aircon";
+  char Thing[20] = "RoomName";
+  char PreloadSSID[20] = "";
+  char PreloadPSW[20] = "";
+  char PreloadFlag[3] = "";
+};
+
+// Champs reçus par /NewParam (sous-ensemble de Config : sans identifiants MQTT)
 struct NewParams {
   char staticIP[16];
   char masqueIP[16];
@@ -92,6 +112,23 @@ inline bool parseNewParams(const char *in, NewParams &out) {
   return true;
 }
 
+// Applique une requête /NewParam analysée (les identifiants MQTT ne changent pas)
+inline void applyNewParams(Config &cfg, const NewParams &np) {
+  MHI_COPY(cfg.staticIP, np.staticIP);
+  MHI_COPY(cfg.masqueIP, np.masqueIP);
+  MHI_COPY(cfg.gatewayIP, np.gatewayIP);
+  MHI_COPY(cfg.dnsIP, np.dnsIP);
+  MHI_COPY(cfg.mqtt_server, np.mqtt_server);
+  MHI_COPY(cfg.mqtt_port, np.mqtt_port);
+  MHI_COPY(cfg.wifiTimeout, np.wifiTimeout);
+  MHI_COPY(cfg.Room, np.Room);
+  MHI_COPY(cfg.Thing, np.Thing);
+  MHI_COPY(cfg.mqtt_enabled, np.mqtt_enabled);
+  MHI_COPY(cfg.PreloadSSID, np.PreloadSSID);
+  MHI_COPY(cfg.PreloadPSW, np.PreloadPSW);
+  MHI_COPY(cfg.PreloadFlag, np.PreloadFlag);
+}
+
 // MQTT désactivé : case décochée, serveur vide ou 0.0.0.0
 inline bool mqttDisabled(const char *enabled, const char *server) {
   return enabled[0] == '0' || server[0] == '\0' || strcmp(server, "0.0.0.0") == 0;
@@ -99,12 +136,10 @@ inline bool mqttDisabled(const char *enabled, const char *server) {
 
 // Début de /param_data : les 10 champs, mqtt_enabled en 10e position.
 // Chaque réseau Wi-Fi ajoute ensuite le triplet ssid, mot de passe, RSSI.
-inline void buildParamsBase(char *out, size_t size, const char *staticIP, const char *masqueIP,
-                            const char *gatewayIP, const char *dnsIP, const char *mqtt_server,
-                            const char *mqtt_port, const char *wifiTimeout, const char *Room,
-                            const char *Thing, const char *mqtt_enabled) {
-  snprintf(out, size, "%s?%s?%s?%s?%s?%s?%s?%s?%s?%s", staticIP, masqueIP, gatewayIP, dnsIP,
-           mqtt_server, mqtt_port, wifiTimeout, Room, Thing, mqtt_enabled);
+inline void buildParamsBase(char *out, size_t size, const Config &cfg) {
+  snprintf(out, size, "%s?%s?%s?%s?%s?%s?%s?%s?%s?%s", cfg.staticIP, cfg.masqueIP, cfg.gatewayIP,
+           cfg.dnsIP, cfg.mqtt_server, cfg.mqtt_port, cfg.wifiTimeout, cfg.Room, cfg.Thing,
+           cfg.mqtt_enabled);
 }
 
 // Ajoute "?ssid?mdp?rssi" (mdp vide sauf pour le réseau enregistré).

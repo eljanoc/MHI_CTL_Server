@@ -38,5 +38,9 @@
 #define GO_WIFIMANAGER 3
 #define GO_CHANGE 4
 
+#include "params_logic.h"
+
+extern mhi::Config config;  // Définie dans setup.cpp
+
 // Copie bornée vers un tableau de char (tronque au lieu de déborder)
 #define COPY_STR(dst, src) strlcpy((dst), (src), sizeof(dst))

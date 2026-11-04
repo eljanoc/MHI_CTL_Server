@@ -16,17 +16,6 @@ R.J. Dekker, June 2018
 extern char configSSID[50];
 extern char configPW[];  //Password to connect to the AP
 
-extern char Thing[20];
-extern char staticIP[16];
-extern char masqueIP[16];
-extern char gatewayIP[16];
-extern char mqtt_server[16];
-extern char mqtt_enabled[2];
-extern char mqtt_port[9];
-extern char mqtt_user[20];
-extern char mqtt_pass[20];
-extern char wifiTimeout[3];  //Minutes without WiFi before the recovery access point opens
-extern char Room[20];
 extern char topic_prefix[42];
 extern char MQTT_SET_PREFIX[60];
 extern char MQTT_OP_PREFIX[60];
@@ -138,7 +127,7 @@ void sendConnexion2mqtt(bool start) {
 
   String ip = WiFi.localIP().toString();
   snprintf(msg, sizeof(msg), "%s num:%d,%dh:%02d  %d/%d/%d, last reboot:%dh:%02d  %d/%d/%d\n SSID:%s, ip:%s, MQTT:%s:%s, deconnect:%d\n",
-          Thing, myConnexionCount++,
+          config.Thing, myConnexionCount++,
           tcur->tm_hour,    /* Hours.   [0-23]      */
           tcur->tm_min,     /* Minutes. [0-59]      */
           tcur->tm_mday,    /* Day.     [1-31]      */
@@ -150,7 +139,7 @@ void sendConnexion2mqtt(bool start) {
           tReboot.tm_mday,    /* Day.     [1-31]      */
           tReboot.tm_mon + 1, /* Month.   [0-11]      */
           tReboot.tm_year + 1900,
-          savedWiFiSSID.c_str(), ip.c_str(), mqtt_server, mqtt_port, nbDeconnect);
+          savedWiFiSSID.c_str(), ip.c_str(), config.mqtt_server, config.mqtt_port, nbDeconnect);
 #ifdef SERIAL_DEBUG
   Serial.printf("publish topic:%s\npayload:%s\n", debug, msg);
 #endif
@@ -195,7 +184,7 @@ void setWiFi() {
     attemptedConnection = true;
   }
 
-  unsigned long delayMinutes = strtoul(wifiTimeout, NULL, 10);
+  unsigned long delayMinutes = strtoul(config.wifiTimeout, NULL, 10);
   if (savedWiFiSSID.length() == 0 || delayMinutes == 0 ||
       now - disconnectedAt >= delayMinutes * 60000UL) {
     startWifiRecoveryPortal();
@@ -227,7 +216,7 @@ void connect() {
     espClient.setTimeout(250);
 #endif
     MQTTclient.setSocketTimeout(1);
-    if (MQTTclient.connect(configSSID, mqtt_user, mqtt_pass)) 
+    if (MQTTclient.connect(configSSID, config.mqtt_user, config.mqtt_pass)) 
     {
 #ifdef SERIAL_DEBUG
       Serial.println("connected!");
@@ -398,11 +387,11 @@ void loop() {
     moyLoop/=nbLoop;
 #ifdef SERIAL_DEBUG
     Serial.printf("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP:%s, Deconnexions:%d\n",
-                core, configSSID, Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), nbDeconnect);
+                core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), nbDeconnect);
 #endif
 #ifdef TELNET_DEBUG
     Debug.printf("Core:%d, configSSID:%s, Room:%s, SSID:%s, local IP,  Deconnexions:%d\n", 
-                core, configSSID, Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), nbDeconnect);
+                core, configSSID, config.Thing, savedWiFiSSID.c_str(), WiFi.localIP().toString().c_str(), nbDeconnect);
 #endif
     nbLoop=0;
     minLoop=100000;
@@ -414,7 +403,7 @@ void loop() {
   static unsigned long lastMQTTReconnectMillis = 0;
   static bool mqttReconnectAttempted = false;
   // MQTT désactivé (case décochée), serveur vide ou 0.0.0.0 : mode autonome, aucune tentative ni redémarrage
-  bool mqttDisabled = mhi::mqttDisabled(mqtt_enabled, mqtt_server);
+  bool mqttDisabled = mhi::mqttDisabled(config.mqtt_enabled, config.mqtt_server);
   if (mqttDisabled && strcmp(MQTTconnectedFlag, "off") != 0)
     strcpy(MQTTconnectedFlag, "off");
   if (!mqttDisabled && !MQTTclient.connected() &&

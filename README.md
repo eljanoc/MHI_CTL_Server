@@ -1,4 +1,4 @@
-# MHI-AC-CtrlServer (V4.36-trace)
+# MHI-AC-CtrlServer (V4.37-trace)
 
 **English** | [Français](README.fr.md)
 
@@ -139,6 +139,9 @@ Tests run on a PC, no board needed: `g++ -I. test/test_params.cpp -o test_params
 
 ## Versions
 Versions are managed with Git tags, for example `v4.25-trace`.
+
+### V4.37
+Fixed: on a fully erased flash, the parameters entered in the Wi-Fi portal (static IP, mask, gateway, DNS, MQTT...) were lost after the first reboot, because the freshly formatted file system was not mounted before `config.json` was written. All configuration variables are now grouped in a single `mhi::Config config` structure (`params_logic.h`).
 
 ### V4.36
 Wi-Fi outages no longer reboot the board. It keeps retrying the saved network and, after `wifiTimeout` minutes without Wi-Fi (2 by default; immediately if no network is saved), also opens the `Clim<name>` recovery access point. The access point closes automatically when Wi-Fi returns. The application web server is paused while the portal is open. `WiFiManager` gained `setDisableSTAConn()`. Tested on ESP32 and ESP8266.

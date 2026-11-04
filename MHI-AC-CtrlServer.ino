@@ -6,7 +6,7 @@
 #include "MHI-AC-Ctrl.h"
 #include "support.h"
 
-#define WEB_VERSION "V4.36"
+#define WEB_VERSION "V4.37"
 MHI_AC_Ctrl_Core mhi_ac_ctrl_core;
 
 POWER_STATUS power_status = unknown;
@@ -181,9 +181,7 @@ extern char webPuissance[6];
 extern char webIpSalon[40];
 extern char webIpChNO[40];
 extern char webIpCuisine[40];
-extern char Thing[];
 extern char MQTTconnectedFlag[4];
-extern char mqtt_server[16];
 char* getWebValuesString(char *S, size_t size) {
 #ifdef ESP32
   #ifdef MULTICORE
@@ -216,9 +214,9 @@ char* getWebValuesString(char *S, size_t size) {
   char cWebRoomTempExt[8] = "undef";
   if (webRoomTempExt < 150.0)
     sprintf(cWebRoomTempExt, "%.1f°C", webRoomTempExt);
-  const char *cMqttState = (strcmp(MQTTconnectedFlag, "yes") == 0) ? mqtt_server : MQTTconnectedFlag;
+  const char *cMqttState = (strcmp(MQTTconnectedFlag, "yes") == 0) ? config.mqtt_server : MQTTconnectedFlag;
   snprintf(S, size, "Deb?%s?%s?%s?%s?%s?%s?%s?%d?Warning: Taux d'erreurs=%.1f%%?%s %s&emsp;Last reboot : %02d/%02d/%d %2dh%02d?%s?%s?%s?%s?%s?Fin", 
-    Thing,webModeTab[webMode], cWebTsetpoint, webFanTab[webFan], webVanesTab[webVanes], cWebRoomTemp, cWebRoomTempExt, webPower,
+    config.Thing,webModeTab[webMode], cWebTsetpoint, webFanTab[webFan], webVanesTab[webVanes], cWebRoomTemp, cWebRoomTempExt, webPower,
           TauxDerreurs,// warning,
           WEB_VERSION,
           Version, tReboot.tm_mday, /* Day.     [1-31]      */
