@@ -21,8 +21,6 @@ char* myPSTR(char* s1, const char* s2) {
 }
 void TopicService(byte* payload, unsigned int length);
 
-extern char service[40];
-
 void MQTT_subscribe_callback(const char* topic, byte* payload, unsigned int length) {
   payload[length] = 0;  // we need a string
   DBG_PRINTF_P(PSTR("MQTT_subscribe_callback, topic=%s payload=%s payload_length=%i\n"), topic, (char*)payload, length);
@@ -473,7 +471,6 @@ void setupMHI() {
   mhi_ac_ctrl_core.init();
   // mhi_ac_ctrl_core.set_fan(7); // set fan AUTO, see https://github.com/absalom-muc/MHI-AC-Ctrl/issues/99
 }
-extern char debug[60];
 
 // publishes captured MOSI frames as 40 hex characters on <debug>/trame
 static void publishTraceFrames() {

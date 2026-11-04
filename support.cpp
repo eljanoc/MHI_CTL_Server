@@ -1,9 +1,6 @@
 #include "support.h"
 #include <Arduino.h>
 
-extern WiFiClient espClient;
-extern PubSubClient MQTTclient;
-
 struct rising_edge_cnt_struct {
   volatile uint32_t SCK = 0;
   volatile uint32_t MOSI = 0;

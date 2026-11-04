@@ -5,10 +5,6 @@
 
 #define VERSION "2.7R4"
 
-#ifdef TELNET_DEBUG
-extern RemoteDebug Debug;
-#endif
-
 #if 0  //old
 #define OTA_HOSTNAME HOSTNAME                       // default for the OTA_HOSTNAME is the HOSTNAME
 #define OTA_PASSWORD ""                             // Enter an OTA password if required
@@ -63,8 +59,6 @@ extern RemoteDebug Debug;
 #endif
 #endif
 
-extern PubSubClient MQTTclient;
-
 void MeasureFrequency();                                      // measures the frequency of the SPI pins
 void initWiFi();                                              // basic WiFi initialization
 void setupWiFi(int& WiFiStatus);                              // setup WIFi connection to AP
@@ -77,9 +71,4 @@ void output_P(ACStatus status, PGM_P topic, PGM_P payload);   // publish via MQT
 void setupOTA();                                              // initialize and start OTA
 void setup_ds18x20();                                         // setup the temperature measurement
 byte getDs18x20Temperature(int temp_hysterese);               // read the temperature from the DS18x20 sensor
-
-extern char topic_prefix[42];
-extern char MQTT_SET_PREFIX[60];
-extern char MQTT_OP_PREFIX[60];
-extern char MQTT_ERR_OP_PREFIX[60];
  

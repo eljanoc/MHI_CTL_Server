@@ -13,33 +13,11 @@ R.J. Dekker, June 2018
 //Access point that WiFiManager starts for configuration. Name and password should be set below before flashing.
 //This is hardcoded and cannot be changed later.
 //#define configSSID "ESPClim"  //AP name (give every unit a unique name before flashing)
-extern char configSSID[50];
-extern char configPW[];  //Password to connect to the AP
 
-extern char topic_prefix[42];
-extern char MQTT_SET_PREFIX[60];
-extern char MQTT_OP_PREFIX[60];
-extern char MQTT_ERR_OP_PREFIX[60];
-extern char debug[60];    //Send only
-extern char service[60];  //Receive only
-
-extern WiFiClient espClient;
-extern PubSubClient MQTTclient;
-#ifdef TELNET_DEBUG
-extern RemoteDebug Debug;
-#endif
-extern NTPClient timeClient;
-
-extern String savedWiFiSSID;
-extern String savedWiFiPass;
-void startWifiRecoveryPortal();
-void handleWifiRecoveryPortal();
 mhi::WebValues web;
 mhi::NetStats net;
 mhi::LoopState loopState;
 mhi::AppControl app;
-
-void startConfigPortal();
 
 void WiFiDisconnectAndRestart() {  
 #ifdef ESP32
@@ -52,7 +30,6 @@ void WiFiDisconnectAndRestart() {
   delay(1000);
 }
 
-bool saveJson (bool);
 void stateTest(){
   if (!app.stateFlag)
     return;
@@ -125,8 +102,6 @@ void sendConnexion2mqtt(bool start) {
   Debug.printf("ret publish:%d,payloadlen:%d, publish topic:%s\npayload:%s\n", b, strlen(msg), debug, msg);
 #endif
 }
-
-extern void startWebPortal();
 
 void setWiFi() {
   static bool disconnected = false;

@@ -2,9 +2,6 @@
 
 #include "include.h"
 #include <Arduino.h>
-#ifdef TELNET_DEBUG
-extern RemoteDebug Debug;
-#endif
 
 // comment out the data you are not interested, but at least leave one row !
 const byte opdata[][2] PROGMEM = {

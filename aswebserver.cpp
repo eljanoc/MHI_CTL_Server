@@ -6,12 +6,7 @@ using namespace std;
 #include <ESPAsyncWebServer.h>
 AsyncWebServer  webServer(80);
 
-#ifdef TELNET_DEBUG
-extern RemoteDebug Debug;
-#endif
-
 void MQTT_subscribe_callback(const char *topic, uint8_t *payload, unsigned int length);
-extern char MQTT_SET_PREFIX[];
 
 void newValue(AsyncWebServerRequest *request) {
   int nb = request->args();

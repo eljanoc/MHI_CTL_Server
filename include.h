@@ -47,6 +47,29 @@ extern mhi::NetStats net;
 extern mhi::LoopState loopState;
 extern mhi::AppControl app;  // Définies dans loop.cpp
 
+// Variables et fonctions partagées entre fichiers (définies dans setup.cpp sauf mention)
+extern char topic_prefix[42];
+extern char MQTT_SET_PREFIX[60];
+extern char MQTT_OP_PREFIX[60];
+extern char MQTT_ERR_OP_PREFIX[60];
+extern char debug[60];    // Send only
+extern char service[60];  // Receive only
+extern char configSSID[50];
+extern char configPW[];  // Password to connect to the AP
+extern String savedWiFiSSID;
+extern String savedWiFiPass;
+extern WiFiClient espClient;
+extern PubSubClient MQTTclient;
+extern NTPClient timeClient;
+#ifdef TELNET_DEBUG
+extern RemoteDebug Debug;
+#endif
+void WiFiDisconnectAndRestart();  // loop.cpp
+void setupMHI();                  // MHI-AC-CtrlServer.ino
+bool saveJson(bool f);
+void startWifiRecoveryPortal();
+void handleWifiRecoveryPortal();
+
 // Traces de debug : écrivent sur Serial (SERIAL_DEBUG) et/ou Telnet (TELNET_DEBUG), sinon rien
 #ifdef SERIAL_DEBUG
 #define DBG_SERIAL(call) Serial.call

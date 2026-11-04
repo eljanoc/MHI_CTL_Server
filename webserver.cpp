@@ -12,13 +12,8 @@ ESP8266WebServer webServer(80);
 #endif
 static volatile bool applicationWebServerEnabled = true;
 
-#ifdef TELNET_DEBUG
-extern RemoteDebug Debug;
-#endif
-
 void WiFiDisconnectAndRestart();
 void MQTT_subscribe_callback(const char *topic, uint8_t *payload, unsigned int length);
-extern char MQTT_SET_PREFIX[];
 void setTrace(bool enable);
 size_t getTraceData(char *output, size_t capacity);
 

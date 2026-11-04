@@ -30,9 +30,6 @@ void setApplicationWebServerEnabled(bool enabled);
 #endif
 
 void MQTT_subscribe_callback(const char *topic, byte *payload, unsigned int length);
-extern void WiFiDisconnectAndRestart();
-extern void setupMHI();
-extern void setupTime();
 
 //Flag for saving data
 bool shouldSaveConfig = false;
