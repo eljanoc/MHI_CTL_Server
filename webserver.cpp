@@ -114,7 +114,7 @@ static void webServerTaskSetup() {
   webServer.on("/SetValue", newValue);
 
   webServer.on("/ajax_data",[]() {
-    char tmp[400];
+    char tmp[512];
     webServer.send(200, "text/html", getWebValuesString(tmp, sizeof(tmp)));
   });
 

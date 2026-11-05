@@ -339,9 +339,13 @@ function LoadData() {
         loadValues(MHI);
         document.getElementById('LED').style='display:none;';
         setTimeout('LoadData();', 2000);
+      } else if (this.readyState == 4 && this.status != 0) {
+        setTimeout('LoadData();', 2000);
       }
     };
     xhttp.open('GET', 'ajax_data', true);
+    xhttp.timeout = 10000;
+    xhttp.ontimeout = function () { setTimeout('LoadData();', 2000); };
     xhttp.send();
     xhttp.onerror=function(error){
       document.getElementById('restart').innerHTML = "Restarting...";

@@ -181,15 +181,15 @@ char* getWebValuesString(char *S, size_t size) {
   #endif
 #endif
 
-  char cWebTsetpoint[8] = "undef";
+  char cWebTsetpoint[16] = "undef";
   if (webTsetpoint < 200)
-    sprintf(cWebTsetpoint, "%d°C", webTsetpoint);
-  char cWebRoomTemp[8] = "undef";
+    snprintf(cWebTsetpoint, sizeof(cWebTsetpoint), "%d°C", webTsetpoint);
+  char cWebRoomTemp[16] = "undef";
   if (webRoomTemp < 150.0)
-    sprintf(cWebRoomTemp, "%.1f°C", webRoomTemp);
-  char cWebRoomTempExt[8] = "undef";
+    snprintf(cWebRoomTemp, sizeof(cWebRoomTemp), "%.1f°C", webRoomTemp);
+  char cWebRoomTempExt[16] = "undef";
   if (webRoomTempExt < 150.0)
-    sprintf(cWebRoomTempExt, "%.1f°C", webRoomTempExt);
+    snprintf(cWebRoomTempExt, sizeof(cWebRoomTempExt), "%.1f°C", webRoomTempExt);
   const char *cMqttState = (strcmp(web.mqttState, "yes") == 0) ? config.mqtt_server : web.mqttState;
   snprintf(S, size, "Deb?%s?%s?%s?%s?%s?%s?%s?%d?Warning: Taux d'erreurs=%.1f%%?%s %s&emsp;Last reboot : %02d/%02d/%d %2dh%02d?%s?%s?%s?%s?%s?Fin", 
     config.Thing,webModeTab[webMode], cWebTsetpoint, webFanTab[webFan], webVanesTab[webVanes], cWebRoomTemp, cWebRoomTempExt, webPower,

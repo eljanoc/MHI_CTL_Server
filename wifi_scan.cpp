@@ -10,9 +10,9 @@ void listNetworks() {
   if (numSsid == -1)
     Serial.println("Couldn't get a WiFi connection");
   else {
-  // print the network number and name for each network found:
+    // print the network number and name for each network found:
     for (int thisNet = 0; thisNet < numSsid; thisNet++)
-      Serial.printf("\(%d\) %s \tSignal:%d dBm\n",thisNet,WiFi.SSID(thisNet).c_str(),WiFi.RSSI(thisNet));
+      Serial.printf("\(%d\) %s \tSignal:%d dBm\n", thisNet, WiFi.SSID(thisNet).c_str(), WiFi.RSSI(thisNet));
   }
 #endif
 }
@@ -21,7 +21,10 @@ void listNetworks() {
 // scan asynchrone, résultats copiés dans un cache réutilisé par /param_data.
 #define WIFI_CACHE_MAX 20
 #define WIFI_CACHE_AGE_MS 30000UL
-static struct { String ssid; int rssi; } wifiCache[WIFI_CACHE_MAX];
+static struct {
+  String ssid;
+  int rssi;
+} wifiCache[WIFI_CACHE_MAX];
 static int wifiCacheCount = 0;
 static unsigned long wifiCacheTime = 0;
 static bool wifiCacheValid = false;
@@ -44,13 +47,12 @@ void refreshWifiCache() {
     WiFi.scanNetworks(true);
 }
 
-char *getParametersString (char *tmp, size_t size)
-{
+char *getParametersString(char *tmp, size_t size) {
   mhi::buildParamsBase(tmp, size, config);
   refreshWifiCache();
   for (int thisNet = 0; thisNet < wifiCacheCount; thisNet++) {
 #ifdef SERIAL_DEBUG
-    Serial.printf("\(%d\) %s \tSignal:%d dBm\n",thisNet,wifiCache[thisNet].ssid.c_str(),wifiCache[thisNet].rssi);
+    Serial.printf("\(%d\) %s \tSignal:%d dBm\n", thisNet, wifiCache[thisNet].ssid.c_str(), wifiCache[thisNet].rssi);
 #endif
     // Réseau suivant ignoré s'il ne tient plus dans le tampon
     if (!mhi::appendNetwork(tmp, size, wifiCache[thisNet].ssid.c_str(), savedWiFiSSID.c_str(),
@@ -58,7 +60,7 @@ char *getParametersString (char *tmp, size_t size)
       break;
   }
 #ifdef SERIAL_DEBUG
-  Serial.printf("parametersString len:%d\n",strlen(tmp));
+  Serial.printf("parametersString len:%d\n", strlen(tmp));
 #endif
   return tmp;
 }
